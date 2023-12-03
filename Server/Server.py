@@ -5,9 +5,9 @@ def run_server():
     # create a socket object
     server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 
-    server_ip = "127.0.0.1"  # replace with the server's IP address
-    server_port = 8000  # replace with the server's port number
-    # establish connection with server
+    server_ip = "127.0.0.1"  
+    server_port = 8000  
+    # add a comment 
     
 
     # bind the socket to a specific address and port
