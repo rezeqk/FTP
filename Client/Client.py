@@ -8,8 +8,8 @@ def run_client():
     server_ip = input("Enter IP Address:")
     print("IP address is: " + server_ip)
     
-    port = int(input("Enter Port Number:"))
-    print("Your Port Number is:" + str(port))
+    server_port = int(input("Enter Port Number:"))
+    print("Your Port Number is:" + str(server_port))
  
     client.connect((server_ip, server_port))
 
