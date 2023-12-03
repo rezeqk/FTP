@@ -27,7 +27,7 @@ def run_server():
         
         # if we receive "close" from the client, then we break
         # out of the loop and close the conneciton
-        if request.lower() == "close":
+        if request.lower() == "bye":
             # send response to the client which acknowledges that the
             # connection should be closed and break out of the loop
             client_socket.send("closed".encode("utf-8"))
