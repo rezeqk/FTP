@@ -14,7 +14,7 @@ def run_server():
     server.bind((server_ip, server_port))
     # listen for incoming connections
     server.listen(0)
-    print(f"Listening on {server_ip}:{port}")
+    print(f"Listening on {server_ip}:{server_port}")
 
     # accept incoming connections
     client_socket, client_address = server.accept()
