@@ -5,9 +5,12 @@ def run_client():
     # create a socket object
     client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 
-    server_ip = "127.0.0.1"  # replace with the server's IP address
-    server_port = 8000  # replace with the server's port number
-    # establish connection with server
+    server_ip = input("Enter IP Address:")
+    print("IP address is: " + server_ip)
+    
+    port = int(input("Enter Port Number:"))
+    print("Your Port Number is:" + str(port))
+ 
     client.connect((server_ip, server_port))
 
     while True:

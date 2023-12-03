@@ -5,14 +5,13 @@ def run_server():
     # create a socket object
     server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 
-    server_ip = input("Enter IP Address:")
-    print("IP address is: " + server_ip)
+    server_ip = "127.0.0.1"  # replace with the server's IP address
+    server_port = 8000  # replace with the server's port number
+    # establish connection with server
     
-    port = int(input("Enter Port Number:"))
-    print("Your Port Number is:" + str(port))
 
     # bind the socket to a specific address and port
-    server.bind((server_ip, port))
+    server.bind((server_ip, server_port))
     # listen for incoming connections
     server.listen(0)
     print(f"Listening on {server_ip}:{port}")
