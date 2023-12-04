@@ -18,7 +18,6 @@ def run_server():
     # accept incoming connections
     client_socket, client_address = server.accept()
     print(f"Accepted connection from {client_address[0]}:{client_address[1]}")
-    print("please enter a command you want to execute Type help for more info")
     # receive data from the client
     while True:
         request = client_socket.recv(1024)
