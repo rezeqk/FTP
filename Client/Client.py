@@ -33,12 +33,10 @@ def run_client():
     client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 
     # Server you are connecting to 
-    server_ip = arguments[1]
+    server_ip = "127.0.0.1"
     # Port you are connecting to 
-    server_port = int(arguments[2])
-     
-    server_ip = arguments[1]
-    server_port = int(arguments[2])
+    server_port = 8000
+   
  
     client.connect((server_ip, server_port))
     print(f"Client listening at : {server_port}")
@@ -59,6 +57,13 @@ def run_client():
         response = client.recv(1024)
         response = response.decode("utf-8")
 
+        if response.lower() == "help":
+            print("help")
+            print("put <filename>")
+            print("get <filename>")
+            print("change <filename>")
+            print("summary")
+            print("bye")
         # if server sent us "closed" in the payload, we break out of the loop and close our socket
         if response.lower() == "bye":
             break
