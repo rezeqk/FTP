@@ -1,17 +1,23 @@
 import socket
+import sys
+
+arguments = sys.argv
 
 
 def run_client():
     # create a socket object
     client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 
-    server_ip = input("Enter IP Address:")
-    print("IP address is: " + server_ip)
-    
-    server_port = int(input("Enter Port Number:"))
-    print("Your Port Number is:" + str(server_port))
+    # Server you are connecting to 
+    server_ip = arguments[1]
+    # Port you are connecting to 
+    server_port = int(arguments[2])
+     
+    server_ip = arguments[1]
+    server_port = int(arguments[2])
  
     client.connect((server_ip, server_port))
+    print(f"Client listening at : {server_port}")
 
     while True:
         # input message and send it to the server
