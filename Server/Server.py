@@ -13,8 +13,8 @@ def run_server():
 
    
     
-    server_ip = arguments[1]
-    server_port = int(arguments[2])
+    server_ip = "127.0.0.1" 
+    server_port =8000 
 
     
     # bind the socket to a specific address and port
@@ -32,8 +32,9 @@ def run_server():
         request = client_socket.recv(1024)
         request = request.decode("utf-8") # convert bytes to string
         recieved = list(request)
+        
         opcode = recieved[0] + recieved[1] + recieved[2]
-        text = ""
+        print ("OPCODE = ", opcode)
         if opcode == "000":
             text = "put"
         elif opcode == "001":
@@ -47,9 +48,17 @@ def run_server():
         print(text)
         
         bins = recieved[8:]
+        binary_file_name = ""
+        for i in range(0, len(bins)):
+            binary_file_name += bins[i]
+        print(binary_file_name)
+
+        
         result = ""
-        for i in range(8, len(bins), 8):
-            binc = bins[i:i + 8]
+        for i in range(0, len(bins), 8):
+            print ("i = ", i)
+            binc = bins[i : i+8]
+            print ("binc = ", binc)
             list_to_str = ''.join(map(str, binc))
             num = int(list_to_str, 2)
             result += chr(num)
