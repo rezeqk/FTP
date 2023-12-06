@@ -1,86 +1,63 @@
 import socket
 import sys
 
-
-
-# get argument
-arguments = sys.argv
-
-
 def run_server():
-    # create a socket object
     server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-
-   
-    
-    server_ip = "127.0.0.1" 
-    server_port =8000 
-
-    
-    # bind the socket to a specific address and port
+    server_ip = "127.0.0.1"
+    server_port = 8000
     server.bind((server_ip, server_port))
-
-    # listen for incoming connections
     server.listen(0)
     print(f"Server listening on {server_ip}:{server_port}")
 
-    # accept incoming connections
     client_socket, client_address = server.accept()
     print(f"Accepted connection from {client_address[0]}:{client_address[1]}")
-    # receive data from the client
+
     while True:
-        request = client_socket.recv(1024)
-        request = request.decode("utf-8") # convert bytes to string
-        recieved = list(request)
-        
-        opcode = recieved[0] + recieved[1] + recieved[2]
-        print ("OPCODE = ", opcode)
-        if opcode == "000":
-            text = "put"
-        elif opcode == "001":
-            text = "get"
-        elif opcode == "010":
-            text = "change"
-        elif opcode == "011":
-            text = "summary"
-        elif opcode == "100":
-            text = "help"
-        print(text)
-        
-        bins = recieved[8:]
-        binary_file_name = ""
-        for i in range(0, len(bins)):
-            binary_file_name += bins[i]
-        print(binary_file_name)
+        request = client_socket.recv(1024).decode("utf-8")
+        if not request:
+            continue
 
-        
-        result = ""
-        for i in range(0, len(bins), 8):
-            print ("i = ", i)
-            binc = bins[i : i+8]
-            print ("binc = ", binc)
-            list_to_str = ''.join(map(str, binc))
-            num = int(list_to_str, 2)
-            result += chr(num)
-        print(result)
+        if len(request) < 3:  # Ensure the request has an opcode
+            print("Error: Invalid request.")
+            continue
 
+        opcode = request[:3]
+        print("OPCODE =", opcode)
+
+        if opcode == "100":  # Help command
+            # Send help response or handle it here
+            response = ("Help information:\n"
+                            "  put <filename> - Upload a file\n"
+                            "  get <filename> - Download a file\n"
+                            "  change <filename> - Change a file\n"
+                            "  summary - Get a summary\n"
+                            "  bye - Exit the program")
+            client_socket.send(response.encode("utf-8"))
+            continue
+        elif opcode in ["000", "001", "010", "011"]:  # Other commands
+            # Process the filename
+            if len(request) < 13:  # Ensure the request has enough data for filename
+                print("Error: Incomplete request for filename.")
+                continue
+
+            filename_length_bin = request[3:8]
+            filename_length = int(filename_length_bin, 2) - 1  # Subtract 1 for the added 1 in client
+            filename_bin = request[8:8 + filename_length * 8]
+            filename = ''.join(chr(int(filename_bin[i:i+8], 2)) for i in range(0, len(filename_bin), 8))
+            print(f"Filename: {filename}")
+
+            # Implement logic for each command here...
+            # ...
 
         if request.lower() == "bye":
-          
             client_socket.send("bye".encode("utf-8"))
             break
 
-        print(f"Received: {request}")
-
-        response = "accepted".encode("utf-8") # convert string to bytes
-        # convert and send accept response to the client
+        response = "accepted".encode("utf-8")
         client_socket.send(response)
 
-    # close connection socket with the client
     client_socket.close()
     print("Connection to client closed")
-    # close server socket
     server.close()
-
 
 run_server()
