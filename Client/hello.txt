@@ -1,1 +1,1 @@
-Helllo my friend 
+10,24,30,50, hello
