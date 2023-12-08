@@ -79,7 +79,28 @@ def run_client():
                 client.send(file_content)
             except FileNotFoundError:
                 print("File not found.")
+        
+        elif opcode == "001":  # Get command
+            if len(inputs) < 2:
+                print("Error: Missing filename.")
+                continue
+            filename = inputs[1]
+            filename_length = get_filename_length(filename)
+            filename_binary = strings_to_binary(filename)
+            request = opcode + filename_length + filename_binary
+            client.send(request.encode("utf-8")[:1024])
+
+            # Receive file content from server
             
+            
+            file_content = client.recv(1024)
+            file_content.decode("utf-8") 
+            
+            # Save received content to a file
+            with open(filename, 'wb') as file:
+                file.write(file_content)
+            print(f"File {filename} received and saved.")
+
         elif opcode == "":  # Bye command
             request = "bye"
             client.send(request.encode("utf-8")[:1024])
