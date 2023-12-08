@@ -1,3 +1,4 @@
+import traceback
 import socket
 import sys
 
@@ -29,44 +30,48 @@ def strings_to_binary(file_name):
 
 
 def run_client():
-    # create a socket object
-    client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    try:
+        # create a socket object
+        client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 
-    # Server you are connecting to 
-    server_ip = arguments[1]
-    # Port you are connecting to 
-    server_port = int(arguments[2])
+        # Server you are connecting to 
+        server_ip = arguments[1]
+        # Port you are connecting to 
+        server_port = int(arguments[2])
+         
      
-    server_ip = arguments[1]
-    server_port = int(arguments[2])
- 
-    client.connect((server_ip, server_port))
-    print(f"Client listening at : {server_port}")
+        client.connect((server_ip, server_port))
+        print(f"Client listening at : {server_port}")
 
-    while True:
-        # input message and send it to the server
-        msg = input("Enter message: ")
-        inputs = msg.split(" ")
-        opcode = get_opcode(inputs[0])
-        filename_length = get_filename_length(inputs[1])
-        filename_binary = strings_to_binary(inputs[1])
-        request = opcode + filename_length + filename_binary
-        print(request)
+        while True:
+            # input message and send it to the server
+            msg = input("Enter message: ")
+            inputs = msg.split(" ")
+            opcode = get_opcode(inputs[0])
+            filename_length = get_filename_length(inputs[1])
+            filename_binary = strings_to_binary(inputs[1])
+            request = opcode + filename_length + filename_binary
+            print(request)
 
-        client.send(request.encode("utf-8")[:1024])
+            client.send(request.encode("utf-8")[:1024])
 
-        # receive message from the server
-        response = client.recv(1024)
-        response = response.decode("utf-8")
+            # receive message from the server
+            response = client.recv(1024)
+            response = response.decode("utf-8")
 
-        # if server sent us "closed" in the payload, we break out of the loop and close our socket
-        if response.lower() == "bye":
-            break
+            # if server sent us "closed" in the payload, we break out of the loop and close our socket
+            if response.lower() == "bye":
+                break
 
-        print(f"Received: {response}")
+            print(f"Received: {response}")
 
-    # close client socket (connection to the server)
-    client.close()
-    print("Connection to server closed")
+    except (socket.error, OSError) as e:
+       print(f"Error with sockets: {e}")
+       traceback.print_exc()
+    finally:
+       # close connection socket with the client
+       if client is not None:
+           client.close()
+           print("Connection to client closed")
 
 run_client()
