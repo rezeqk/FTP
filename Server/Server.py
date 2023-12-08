@@ -24,12 +24,25 @@ def run_server():
         opcode = request[:3]
         print("OPCODE =", opcode)
 
+        if opcode == "010":  # Change command
+            old_filename_length_bin = request[3:8]
+            old_filename_length = int(old_filename_length_bin, 2) - 1
+            new_filename_length_bin = request[8 + old_filename_length * 8:13 + old_filename_length * 8]
+            new_filename_length = int(new_filename_length_bin, 2) - 1
+
+            old_filename_bin = request[8:8 + old_filename_length * 8]
+            new_filename_bin = request[13 + old_filename_length * 8:13 + old_filename_length * 8 + new_filename_length * 8]
+
+            old_filename = ''.join(chr(int(old_filename_bin[i:i+8], 2)) for i in range(0, len(old_filename_bin), 8))
+            new_filename = ''.join(chr(int(new_filename_bin[i:i+8], 2)) for i in range(0, len(new_filename_bin), 8))
+
+            print(f"Changing file name from {old_filename} to {new_filename}")
         if opcode == "100":  # Help command
             # Send help response or handle it here
             response = ("Help information:\n"
                             "  put <filename> - Upload a file\n"
                             "  get <filename> - Download a file\n"
-                            "  change <filename> - Change a file\n"
+                            "  change <filename>  <new filename> - Change a file\n"
                             "  summary - Get a summary\n"
                             "  bye - Exit the program")
             client_socket.send(response.encode("utf-8"))
@@ -46,8 +59,6 @@ def run_server():
             filename = ''.join(chr(int(filename_bin[i:i+8], 2)) for i in range(0, len(filename_bin), 8))
             print(f"Filename: {filename}")
 
-            # Implement logic for each command here...
-            # ...
 
         if request.lower() == "bye":
             client_socket.send("bye".encode("utf-8"))
