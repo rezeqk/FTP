@@ -2,6 +2,9 @@ import socket
 import sys
 
 arguments = sys.argv
+def create_socket():
+    return socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    
 
 def get_opcode (opcode_command):
     # TODO:  lower capital get GET Get
@@ -47,12 +50,25 @@ def run_client():
         inputs = msg.split(" ")
         opcode = get_opcode(inputs[0])
 
-        if opcode == "100":  # Help command
+        if opcode == "010":  # Change command
+            if len(inputs) < 3:
+                print("Error: Change command requires two filenames.")
+                continue
+            old_filename_length = get_filename_length(inputs[1])
+            new_filename_length = get_filename_length(inputs[2])
+            old_filename_binary = strings_to_binary(inputs[1])
+            new_filename_binary = strings_to_binary(inputs[2])
+            request = opcode + old_filename_length + old_filename_binary + new_filename_length + new_filename_binary
+        elif opcode == "100":  # Help command
             request = opcode
+        elif opcode == "":  # Bye command
+            request = "bye"
+            client.send(request.encode("utf-8")[:1024])
+            break
         else:
             if len(inputs) < 2:
                 print("Error: Missing filename.")
-                break
+                continue
             filename_length = get_filename_length(inputs[1])
             filename_binary = strings_to_binary(inputs[1])
             request = opcode + filename_length + filename_binary
@@ -60,7 +76,7 @@ def run_client():
         print(request)
         client.send(request.encode("utf-8")[:1024])
 
-        # receive message from the server
+  # receive message from the server
         response = client.recv(1024)
         response = response.decode("utf-8")
 
