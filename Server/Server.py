@@ -40,6 +40,22 @@ def run_server():
             print(f"File {filename} received and saved.")
             client_socket.send("File data received.".encode("utf-8"))
 
+        if opcode == "001":  # Get command
+                 # Extract filename
+            filename_length_bin = request[3:8]
+            filename_length = int(filename_length_bin, 2) - 1
+            filename_bin = request[8:8 + filename_length * 8]
+            filename = ''.join(chr(int(filename_bin[i:i+8], 2)) for i in range(0, len(filename_bin), 8))
+
+    # Send file content
+            try:
+                with open(filename, 'rb') as file:
+                    file_content = file.read()
+                    client_socket.send(file_content)
+            except FileNotFoundError:
+                print("File not found.")
+        
+
         if opcode == "010":  # Change command
             old_filename_length_bin = request[3:8]
             old_filename_length = int(old_filename_length_bin, 2) - 1
@@ -53,6 +69,8 @@ def run_server():
             new_filename = ''.join(chr(int(new_filename_bin[i:i+8], 2)) for i in range(0, len(new_filename_bin), 8))
 
             print(f"Changing file name from {old_filename} to {new_filename}")
+        
+        
         if opcode == "100":  # Help command
             # Send help response or handle it here
             response = ("Help information:\n"
@@ -63,6 +81,9 @@ def run_server():
                             "  bye - Exit the program")
             client_socket.send(response.encode("utf-8"))
             continue
+        
+       
+
         elif opcode in ["000", "001", "010", "011"]:  # Other commands
             # Process the filename
             if len(request) < 13:  # Ensure the request has enough data for filename
