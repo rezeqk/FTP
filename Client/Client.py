@@ -59,12 +59,32 @@ def run_client():
             old_filename_binary = strings_to_binary(inputs[1])
             new_filename_binary = strings_to_binary(inputs[2])
             request = opcode + old_filename_length + old_filename_binary + new_filename_length + new_filename_binary
+        
         elif opcode == "100":  # Help command
             request = opcode
+            client.send(request.encode("utf-8")[:1024])
+
+        elif opcode == "000":  # Put command
+            if len(inputs) < 2:
+                print("Error: Missing filename.")
+                continue
+            filename = inputs[1]
+            try:
+                with open(filename, 'rb') as file:
+                    file_content = file.read()
+                filename_length = get_filename_length(filename)
+                filename_binary = strings_to_binary(filename)
+                request = opcode + filename_length + filename_binary
+                client.send(request.encode("utf-8")[:1024])
+                client.send(file_content)
+            except FileNotFoundError:
+                print("File not found.")
+            
         elif opcode == "":  # Bye command
             request = "bye"
             client.send(request.encode("utf-8")[:1024])
             break
+
         else:
             if len(inputs) < 2:
                 print("Error: Missing filename.")
@@ -72,23 +92,15 @@ def run_client():
             filename_length = get_filename_length(inputs[1])
             filename_binary = strings_to_binary(inputs[1])
             request = opcode + filename_length + filename_binary
+            client.send(request.encode("utf-8")[:1024])
 
-        print(request)
-        client.send(request.encode("utf-8")[:1024])
-
-  # receive message from the server
+        # receive message from the server
         response = client.recv(1024)
         response = response.decode("utf-8")
-
-        
-          
-        # if server sent us "closed" in the payload, we break out of the loop and close our socket
         if response.lower() == "bye":
             break
-
         print(f"Received: {response}")
 
-    # close client socket (connection to the server)
     client.close()
     print("Connection to server closed")
 

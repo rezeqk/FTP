@@ -24,6 +24,22 @@ def run_server():
         opcode = request[:3]
         print("OPCODE =", opcode)
 
+        if opcode == "000":  # Put command
+            # Receive and process the filename
+            filename_length_bin = request[3:8]
+            filename_length = int(filename_length_bin, 2) - 1
+            filename_bin = request[8:8 + filename_length * 8]
+            filename = ''.join(chr(int(filename_bin[i:i+8], 2)) for i in range(0, len(filename_bin), 8))
+            print(f"Receiving file: {filename}")
+            client_socket.send("Filename received.".encode("utf-8"))
+
+            # Receive and write the file content
+            file_content = client_socket.recv(1024)
+            with open(filename, 'wb') as file:
+                file.write(file_content)
+            print(f"File {filename} received and saved.")
+            client_socket.send("File data received.".encode("utf-8"))
+
         if opcode == "010":  # Change command
             old_filename_length_bin = request[3:8]
             old_filename_length = int(old_filename_length_bin, 2) - 1
