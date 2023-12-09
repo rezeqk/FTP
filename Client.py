@@ -135,20 +135,15 @@ def run_client():
 
                 continue
 
-                
-
-            
-            elif command == "change":
-                opcode = get_opcode(command)
-                old_file_name = get_filename_length(inputs[1])
-                new_file_name = get_filename_length(inputs[2])
-                try:
-                    os.rename(old_file_name, new_file_name)
-                    print(f"File name changed from {old_file_name} to {old_file_name}")
-                except FileNotFoundError:
-                    print("Original file not found.")
-                except Exception as e:
-                    print(f"Error renaming file: {e}")
+                ##TODO: needs to be fixed
+            elif command == "010":  # Change command
+                if len(inputs) < 3:
+                 print("Error: Change command requires two filenames.")
+                 continue
+                old_filename = inputs[1]
+                new_filename = inputs[2]
+                request = opcode + old_filename + " " + new_filename
+                client.send(request.encode("utf-8"))
 
     except (socket.error, OSError) as e:
         print(f"Error with sockets: {e}")
