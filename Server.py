@@ -56,10 +56,10 @@ def run_server():
                 send_message(client_socket, "Filename received")
 
                 # Receive and write the file content
-                # file_content = client_socket.recv(BUFFER_SIZE)
-                # file_content = file_content.decode(ENCODING)
-                file_content = receive_message(client_socket)
-                with open(filename, 'w') as file:
+                file_content = client_socket.recv(BUFFER_SIZE)
+               # file_content = file_content.decode(ENCODING)
+                #file_content = receive_message(client_socket)
+                with open(filename, 'wb') as file:
                     file.write(file_content)
                 print(f"File {filename} received and saved.")
                 client_socket.send("File data received.".encode("utf-8"))

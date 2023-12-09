@@ -86,7 +86,7 @@ def run_client():
                 filename = "Client/" + inputs[1]
                 try:
                     #  open the file
-                    with open(inputs[1], 'rb') as file:
+                    with open(filename, 'rb') as file:
                         file_content = file.read()
                 except FileNotFoundError:
                     # raise exception if something goes wrong 
@@ -111,7 +111,7 @@ def run_client():
                 request = opcode + filename_length + filename_binary
 
                 continue
-
+            
 
     except (socket.error, OSError) as e:
         print(f"Error with sockets: {e}")
