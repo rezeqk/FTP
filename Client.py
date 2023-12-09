@@ -1,4 +1,5 @@
 import traceback
+import os
 import socket
 import sys
 from utils import * 
@@ -105,13 +106,49 @@ def run_client():
             
             # HANDLE PUT 
             elif  command == "get" :
+                # get opcode in bytes
                 opcode = get_opcode(command)
+
+                # get the length in bytes 
                 filename_length = get_filename_length(inputs[1])
+                
+                # get filename in bytes
                 filename_binary = string_to_binary(inputs[1])
                 request = opcode + filename_length + filename_binary
+                
+                # send request for getting a file 
+                send_message(client, request)
+                response = client.recv(BUFFER_SIZE)
+                response = client.recv(BUFFER_SIZE)
+
+                # if request accepted 
+                # get the filename and content 
+                filename = "Client/" + inputs[1]
+                try:
+                    #  open the file
+                    with open(filename, 'wb') as file:
+                        file.write(response)
+                except FileNotFoundError:
+                    # raise exception if something goes wrong 
+                    print("File not found.")
+                    continue
 
                 continue
+
+                
+
             
+            elif command == "change":
+                opcode = get_opcode(command)
+                old_file_name = get_filename_length(inputs[1])
+                new_file_name = get_filename_length(inputs[2])
+                try:
+                    os.rename(old_file_name, new_file_name)
+                    print(f"File name changed from {old_file_name} to {old_file_name}")
+                except FileNotFoundError:
+                    print("Original file not found.")
+                except Exception as e:
+                    print(f"Error renaming file: {e}")
 
     except (socket.error, OSError) as e:
         print(f"Error with sockets: {e}")
