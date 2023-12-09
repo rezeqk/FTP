@@ -136,13 +136,15 @@ def run_client():
                 continue
 
                 ##TODO: needs to be fixed
-            elif command == "010":  # Change command
-                if len(inputs) < 3:
-                 print("Error: Change command requires two filenames.")
-                 continue
-                old_filename = inputs[1]
-                new_filename = inputs[2]
-                request = opcode + old_filename + " " + new_filename
+            elif command == "change":  # Change command
+                opcode = get_opcode(command)
+                old_filename_length = get_filename_length(inputs[1])
+                new_filename_length = get_filename_length(inputs[2])
+
+                # get the file names in bytes 
+                old_filename_binary = string_to_binary(inputs[1])
+                new_filename_binary = string_to_binary(inputs[2])
+                request = opcode + old_filename_length + old_filename_binary + new_filename_length + new_filename_binary
                 client.send(request.encode("utf-8"))
 
     except (socket.error, OSError) as e:

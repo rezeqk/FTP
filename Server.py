@@ -88,23 +88,23 @@ def run_server():
 
            
             if command == "change":
-            ##TODO:needs to be fixed
-             filename_length_bin = request[3:8]
-             filename_length = int(filename_length_bin, 2) - 1
-             # Get the filename
-             filename_bin = request[8:8 + filename_length * 8]
+                ##TODO:needs to be fixed
+                old_filename_length_bin = request[3:8]
+                old_filename_length = int(old_filename_length_bin, 2) - 1
+                new_filename_length_bin = request[8 + old_filename_length * 8:13 + old_filename_length * 8]
+                new_filename_length = int(new_filename_length_bin, 2) - 1
 
-              # Transform the filename into a string
-             filename = ''.join(chr(int(filename_bin[i:i+8], 2)) for i in range(0, len(filename_bin), 8))
-
-                # Assuming the old and new filenames are concatenated in `filename`
-             old_filename, new_filename = filename.split(" ", 1)
-             old_filename_full = "Server/" + old_filename
-             new_filename_full = "Server/" + new_filename
-
-             os.rename(old_filename_full, new_filename_full)
-             print(f"Changed file name from {old_filename_full} to {new_filename_full}")
-             client_socket.send("File name changed successfully.".encode("utf-8"))
+        # Extracting the old and new filenames
+                old_filename_bin = request[8:8 + old_filename_length * 8]
+                new_filename_bin = request[13 + old_filename_length * 8:13 + old_filename_length * 8 + new_filename_length * 8]
+                old_filename = ''.join(chr(int(old_filename_bin[i:i+8], 2)) for i in range(0, len(old_filename_bin), 8))
+                new_filename = ''.join(chr(int(new_filename_bin[i:i+8], 2)) for i in range(0, len(new_filename_bin), 8))
+                old_filename = "Server/" + old_filename
+                new_filename = "Server/" + new_filename
+        # Renaming the file
+                os.rename(old_filename, new_filename)
+                print(f"Changed file name from {old_filename} to {new_filename}")
+                client_socket.send("File name changed successfully.".encode("utf-8"))
 
 
     except (socket.error, OSError) as e:
