@@ -34,6 +34,27 @@ def run_server():
             # transform the opcode in commange 
             command = get_command(opcode)
             print(f"opcode : {opcode}  - command {command}")
+            if command == "get":
+                print(request)
+                filename_length_bin = request[3:8]
+                filename_length = int(filename_length_bin, 2) - 1
+                # get the filename
+                filename_bin = request[8:8 + filename_length * 8]
+
+                ## transform the filename in 
+                filename = ''.join(chr(int(filename_bin[i:i+8], 2)) for i in range(0, len(filename_bin), 8))
+                filename = "Server/" + filename
+                print(f"Sending file: {filename}")
+                client_socket.send("Filename received.".encode("utf-8"))
+                send_message(client_socket, "Filename received")
+
+                # Send the file content
+                with open(filename, 'rb') as file:
+                    file_content = file.read()
+                client_socket.send(file_content)
+                print(f"File {filename} sent.")
+                client_socket.send("File data sent.".encode("utf-8"))
+                continue
 
             if command == "help": 
                 ##TODO : SEND RESPONSE CODE 
