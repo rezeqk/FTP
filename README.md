@@ -13,5 +13,5 @@
 - [ ] Make sure server can connect to multiple client <sub>
 - [ ] implement udp connection
 - [ ] fix the change function
-- [ ] text
-- [ ] text
+- [ ] implement byte transfer
+- [ ] need a way to send to client or server an error if something bad occru
