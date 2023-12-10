@@ -30,7 +30,7 @@ def get_response_code(code: str) -> bytes:
 def get_opcode(opcode: str) -> bytes:
     opcode = opcode.lower()
     opcode_in_bin = OPCODES.get(opcode, "")
-    return bytes(opcode_in_bin, "utf-8")
+    return bytes(opcode_in_bin, ENCODING)
 
 
 # given a binary opcode return a string opcode
@@ -43,10 +43,27 @@ def get_command(opcode: bytes) -> str:
 
 
 # given a file name return the length in binary
-def get_filename_length(file_name: str):
+def get_filename_length(file_name: str) -> bytes:
     filename_length = len(file_name) + 1
     filename_length = format(filename_length, "b").zfill(5)
     return filename_length
+
+
+# give an integer transform it into binary using the specified number of bits
+def int_to_binary(number: int, n_bits: int) -> bytes:
+    length_in_bin = format(number, "b")
+    bits = len(length_in_bin)
+    if bits < n_bits:
+        # if the number of bits is less than 5 pad with extra 0 on the left
+        return bytes(length_in_bin.zfill(n_bits - bits), ENCODING)
+    else:
+        return bytes(length_in_bin, ENCODING)
+
+
+def binary_to_int(binary_number: bytes, n_bits: int) -> int:
+    binary_string = "".join(format(byte, "08b") for byte in binary_number)
+    binary_string = binary_string[:n_bits]
+    return int(binary_string, 2)
 
 
 def string_to_binary(string: str) -> bytes:

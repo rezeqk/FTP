@@ -65,16 +65,22 @@ def run_server():
                 continue
 
             elif command == "help":
-                ##TODO : SEND RESPONSE CODE
+                # pring request if debug mode is true
                 print_content(request, DEBUG)
+
+                # get the response code, already in bin
                 response_code = get_response_code("help response")
+
                 response_content = get_help()
-                response_length = bytes(
-                    format(len(response_content), "b").zfill(5), ENCODING
-                )
-                response = (
-                    response_code + response_length + bytes(response_content, ENCODING)
-                )
+                # get the response help
+                response_length = len(response_content.encode(ENCODING))
+                print(response_length)
+                # transform it in bytes
+
+                response_length_in_bytes = int_to_binary(response_length, 5)
+                print(response_length_in_bytes)
+                response = bytes(response_content, ENCODING)
+                response = response_code + response_length_in_bytes + response
                 client_socket.sendall(response)
                 continue
             elif command == "put":
@@ -151,14 +157,8 @@ def run_server():
 
 # return all the information about commands and what not
 def get_help():
-    return (
-        "Help information:\n"
-        "  put <filename> - Upload a file\n"
-        "  get <filename> - Download a file\n"
-        "  change <filename> - Change a file\n"
-        "  summary - Get a summary\n"
-        "  bye - Exit the program"
-    )
+    # As per requirement the string is shortened to not  exceeed 31 characters
+    return "bye change get help put sumry"
 
 
 run_server()

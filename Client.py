@@ -1,11 +1,12 @@
 import traceback
 import socket
-from utils import *
+from utils import *  # NOQA
 
 # Server you are connecting to
 server_ip = "127.0.0.1"
 # Port you are connecting to
 server_port = PORT
+DEBUG_MODE = True
 
 
 def run_client():
@@ -29,17 +30,26 @@ def run_client():
                 break
 
             if command == "help":
-                # get opcode in bytes
+                # get opcode in binary
                 opcode = get_opcode(command)
-                # get opcode  in binary
 
                 request = opcode
                 client.sendall(request)
-                # send_message(client, opcode)
 
                 # get response
-                response = receive_message(client)
-                print(f"Received response : {response}")
+                response = client.recv(BUFFER_SIZE).decode()
+                print(response)
+
+                response_code = response[:3]
+                if response_code == "110":
+                    data_length = response[3:8]
+                    received_data = response[8:]
+                    msg_to_print = f"Received packet: Response code : {response_code} - Data length : {data_length}\n{received_data}"
+                    print_content(msg_to_print, DEBUG_MODE)
+
+                else:
+                    print_content("Error", DEBUG_MODE)
+
                 continue
 
             # the request is something else check_inputs, if iputs are not valid, restart the loop
