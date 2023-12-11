@@ -111,7 +111,6 @@ def run_server():
                     # Receive file content in chunks
                     chunk_size = min(remaining_size, BUFFER_SIZE)
                     file_content += client_socket.recv(chunk_size)
-                    print(file_content)
                     remaining_size -= chunk_size
 
                 with open(filename, "wb") as file:

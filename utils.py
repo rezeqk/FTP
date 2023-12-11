@@ -2,7 +2,7 @@ import socket
 
 SUCCESS = 1
 ERROR = 0
-PORT = 9000
+PORT = 9003
 BUFFER_SIZE = 1024
 ENCODING = "utf-8"
 ERROR_MESSAGE = "Invalid inputs, type help to get help"
