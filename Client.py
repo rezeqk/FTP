@@ -102,7 +102,7 @@ def run_client():
                     filename = "Client/" + filename
                     remaining_size = filesize
                     file_content = b""
-                    file_content +=response[end:]
+                    file_content +=response[end + 8:]
                     remaining_size -= len(file_content)
 
                     while remaining_size > 0:
