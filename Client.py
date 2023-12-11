@@ -63,21 +63,65 @@ def run_client():
                 # get opcode in bytes
                 opcode = get_opcode(command)
 
-                # get the length in bytes
-                old_filename_length = get_filename_length(inputs[1])
-                new_filename_length = get_filename_length(inputs[2])
+                # get the filename_length
+                filename_length = len(inputs[1]) + 1
+                # TODO : check filename length, should not exceed 31 characters
+                # transfom the length in binary
+                filename_length = int_to_binary(filename_length, 5)
 
-                # get the file names in bytes
-                old_filename_binary = string_to_binary(inputs[1])
-                new_filename_binary = string_to_binary(inputs[2])
-                request = (
-                    opcode
-                    + old_filename_length
-                    + old_filename_binary
-                    + new_filename_length
-                    + new_filename_binary
-                )
-                ## HANDLE THE LOGIC OF SUMMARY
+                # get filename in bytes
+                filename_binary = string_to_binary(inputs[1])
+
+                request = opcode + filename_length + filename_binary
+                print_content("Request",DEBUG_MODE)
+                print_content(request, DEBUG_MODE)
+
+                client.send(request)
+
+                response = client.recv(BUFFER_SIZE)
+                response_code = response[:3]
+                filename_length= response[3:8]
+                filename_length = int(filename_length, 2) - 1
+
+                # get the filename
+                filename_bin = response[8 : 8 + filename_length * 8]
+                ## transform the filename in str
+                filename = binary_to_string(filename_bin)
+
+                # get the file size
+                start = 8 + filename_length * 8
+                end = start + 24 # file size is always 32 bits 
+                filesize = response[start:end]
+                filesize = binary_to_int(filesize)
+                header = response[:end]
+                print_content("Response", DEBUG_MODE)
+                print_content(header,DEBUG_MODE)
+
+                # handle the response
+                if response_code == get_response_code("summary success"):
+                    filename = "Client/" + filename
+                    remaining_size = filesize
+                    file_content = b""
+                    file_content +=response[end:]
+                    remaining_size -= len(file_content)
+
+                    while remaining_size > 0:
+                        # Receive file content in chunks
+                        chunk_size = min(remaining_size, BUFFER_SIZE)
+                        file_content += client.recv(chunk_size)
+                        remaining_size -= chunk_size
+
+                    with open(filename, "wb") as file:
+                            # write to file
+                            file.write(file_content)
+                            print_content("Summary successful")
+                elif response_code == get_response_code("file not found"):
+                    print("Error : file not found please try again")
+                    continue
+                else :
+                    print("Unknown issue could not send the request")
+                    continue
+                continue
                 continue
 
             # HANDLE GET

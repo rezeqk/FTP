@@ -75,7 +75,7 @@ def run_server():
                 response = opcode + filename_length_bin + filename_bin + filesize
                 client_socket.send(response)
 
-                client_socket.send(file_content)
+                client_socket.send(file_content.encode(ENCODING))
                 continue
 
             elif command == "help":
@@ -173,7 +173,8 @@ def run_server():
                     print_content(f"Changed file name from {old_filename} to {new_filename}", DEBUG_MODE)
 
                     # If successful, send a success response
-                    response_code = get_response_code("summary success")
+                    #put and change have the same res code 
+                    response_code = get_response_code("put success")
                     response_code = response_code + b"00000"
                     client_socket.sendall(response_code)
                     continue
@@ -191,6 +192,69 @@ def run_server():
                     error_response = error_response + b"00000"
                     client_socket.sendall(error_response)
                     continue
+            elif command == "summary":
+                print_content("request", DEBUG_MODE)
+                print_content(request, DEBUG_MODE)
+                # get the filename size
+                filename_length_bin = request[3:8]
+                filename_length = int(filename_length_bin, 2) - 1
+
+                # get the filename
+                filename_bin = request[8 : 8 + filename_length * 8]
+   
+                ## transform the filename in str
+                filename = binary_to_string(filename_bin)
+
+                filepath = "Server/" + filename
+                try:
+                    #  open the file
+                    with open(filepath, "r") as file:
+                        file_content = file.read()
+                except FileNotFoundError:
+                    # raise exception if something goes wrong
+                    response_code = get_response_code("file not found")
+                    response_code = response_code + b"00000"
+                    client_socket.sendall(response_code)
+                    continue
+                
+                # perfom the statical analysis 
+                numbers = file_content.split(",")
+                numbers = [int(num) for num in numbers]
+
+                minimum = min(numbers)
+
+                # Calculate the maximum
+                maximum = max(numbers)
+
+                # Calculate the average
+                average = sum(numbers) / len(numbers)
+                response_data = f"Minimum : {minimum}\nMaximum : {maximum}\nAverage{average}" 
+
+                # write to the file
+                # open file 
+                new_filename = "Summary: " + filename
+                new_path = "Server/" + new_filename
+                # Open the file in write mode
+                with open(new_path, "w") as file:
+                    # Write the response data to the file
+                    file.write(response_data)
+
+                response_code= get_response_code("summary success")
+                # make sure the size is 4 byte, careful if size exceed 1GB
+                filesize = os.path.getsize(new_path)
+                filesize = filesize.to_bytes(4, byteorder='big', signed=False)
+                filesize = hex_to_binary(filesize)
+
+                # new filename
+                filename_length = len(new_filename) + 1
+                filename_length = int_to_binary(filename_length, 5)
+                
+                new_filename = string_to_binary(new_filename)
+                response = response_code + filename_length + new_filename + filesize
+                client_socket.send(response)
+
+                client_socket.send(response_data.encode(ENCODING))
+
     except (socket.error, OSError) as e:
         print(f"Error with sockets: {e}")
         traceback.print_exc()
