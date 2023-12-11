@@ -5,7 +5,7 @@ import os
 from utils import *
 
 
-DEBUG = True
+DEBUG_MODE = True
 server_ip = "127.0.0.1"
 server_port = PORT
 
@@ -37,7 +37,7 @@ def run_server():
             # transform the opcode in commange
             command = get_command(opcode)
             msg = f"opcode : {opcode}  - command {command}"
-            print_content(msg, DEBUG)
+            print_content(msg, DEBUG_MODE)
 
             if command == "get":
                 print(request)
@@ -73,41 +73,54 @@ def run_server():
 
                 response_content = get_help()
                 # get the response help
-                response_length = len(response_content.encode(ENCODING))
-                print(response_length)
+                response_length = len(response_content)
                 # transform it in bytes
 
                 response_length_in_bytes = int_to_binary(response_length, 5)
-                print(response_length_in_bytes)
                 response = bytes(response_content, ENCODING)
                 response = response_code + response_length_in_bytes + response
                 client_socket.sendall(response)
                 continue
             elif command == "put":
-                print(request)
+                print_content("request", DEBUG_MODE)
+                print_content(request, DEBUG_MODE)
+                # get the filename size
                 filename_length_bin = request[3:8]
                 filename_length = int(filename_length_bin, 2) - 1
+                
+
                 # get the filename
                 filename_bin = request[8 : 8 + filename_length * 8]
+   
+                ## transform the filename in str
+                filename = binary_to_string(filename_bin)
+                # get the file size 
+                filesize = request[8 + filename_length * 8 : ]
+                filesize = binary_to_int(filesize)
+                
+                
+                response_code = get_response_code("put success")
+                ## pad the binary string to match header format
+                response_code = response_code + b"00000"
+                client_socket.sendall(response_code)
 
-                ## transform the filename in
-                filename = "".join(
-                    chr(int(filename_bin[i : i + 8], 2))
-                    for i in range(0, len(filename_bin), 8)
-                )
                 filename = "Server/" + filename
-                print(f"Receiving file: {filename}")
-                client_socket.send("Filename received.".encode("utf-8"))
-                send_message(client_socket, "Filename received")
+                remaining_size = filesize
+                file_content = b""
+                while remaining_size > 0:
+                    # Receive file content in chunks
+                    chunk_size = min(remaining_size, BUFFER_SIZE)
+                    file_content += client_socket.recv(chunk_size)
+                    print(file_content)
+                    remaining_size -= chunk_size
 
-                # Receive and write the file content
-                file_content = client_socket.recv(BUFFER_SIZE)
-                # file_content = file_content.decode(ENCODING)
-                # file_content = receive_message(client_socket)
                 with open(filename, "wb") as file:
-                    file.write(file_content)
-                print(f"File {filename} received and saved.")
-                client_socket.send("File data received.".encode("utf-8"))
+                        file.write(file_content)
+                # send back the response
+                response_code = get_response_code("put success")
+                response_code = response_code + b"00000"
+                client_socket.sendall(response_code)
+                continue
 
             elif command == "change":
                 ##TODO:needs to be fixed

@@ -2,7 +2,7 @@ import socket
 
 SUCCESS = 1
 ERROR = 0
-PORT = 9001
+PORT = 9000
 BUFFER_SIZE = 1024
 ENCODING = "utf-8"
 ERROR_MESSAGE = "Invalid inputs, type help to get help"
@@ -50,49 +50,55 @@ def get_filename_length(file_name: str) -> bytes:
 
 
 # give an integer transform it into binary using the specified number of bits
+# def int_to_binary(number: int, n_bits: int) -> bytes:
+#     length_in_bin = format(number, "b")
+#     bits = len(length_in_bin)
+#     if bits < n_bits:
+#         # if the number of bits is less than 5 pad with extra 0 on the left
+#         return bytes(length_in_bin.zfill(n_bits - bits), ENCODING)
+#     else:
+#         return bytes(length_in_bin, ENCODING)
+
 def int_to_binary(number: int, n_bits: int) -> bytes:
-    length_in_bin = format(number, "b")
-    bits = len(length_in_bin)
-    if bits < n_bits:
-        # if the number of bits is less than 5 pad with extra 0 on the left
-        return bytes(length_in_bin.zfill(n_bits - bits), ENCODING)
-    else:
-        return bytes(length_in_bin, ENCODING)
+    return format(number, f"0{n_bits}b").encode('utf-8')
 
 
-def binary_to_int(binary_number: bytes, n_bits: int) -> int:
-    binary_string = "".join(format(byte, "08b") for byte in binary_number)
-    binary_string = binary_string[:n_bits]
+def binary_to_int(binary_number: bytes) -> int:
+    binary_string = binary_number.decode(ENCODING)  # Decode the bytes to a string
     return int(binary_string, 2)
 
-
 def string_to_binary(string: str) -> bytes:
-    # Converts the binary sequence string to bytes using UTF-8 encoding.
-    binary_string = " ".join(format(ord(x), "b") for x in string)
+    # Converts the string to a binary sequence using UTF-8 encoding.
+    binary_string = "".join(format(ord(x), "08b") for x in string)
     return bytes(binary_string, ENCODING)
 
+# from hex like format(ox0f) of bytes to binary 0000 1111
+def hex_to_binary(byte_data:bytes) -> bytes:
+    # Convert bytes to a binary string
+    binary_string = ''.join(format(byte, '08b') for byte in byte_data)
+    return binary_string.encode('utf-8')
 
-def binary_to_string(binary_data: bytes) -> str:
-    """
-    Convert a bytes object containing binary data to a string.
-    """
-    # Convert the bytes object to a binary string
-    binary_string = "".join(format(byte, "08b") for byte in binary_data)
-    print(binary_string)
-    print(type(binary_string))
+# def binary_to_string(binary_data: bytes) -> str:
+#     """
+#     Convert a bytes object containing binary data to a string.
+#     """
+#     # Convert the bytes object to a binary string
+#     binary_string = "".join(format(byte, "08b") for byte in binary_data)
+#     print(binary_string)
+#     print(type(binary_string))
 
-    # Remove spaces from the binary string
-    binary_string = binary_string.replace(" ", "")
+#     # Remove spaces from the binary string
+#     binary_string = binary_string.replace(" ", "")
 
-    # Split the binary string into 8-bit segments
-    segments = [binary_string[i : i + 8] for i in range(0, len(binary_string), 8)]
-    print(segments)
-    print(type(segments))
+#     # Split the binary string into 8-bit segments
+#     segments = [binary_string[i : i + 8] for i in range(0, len(binary_string), 8)]
+#     print(segments)
+#     print(type(segments))
 
-    # Convert each 8-bit segment to an integer and then to a character
-    result = "".join(chr(int(segment, 2)) for segment in segments)
-    print(result)
-    return result
+#     # Convert each 8-bit segment to an integer and then to a character
+#     result = "".join(chr(int(segment, 2)) for segment in segments)
+#     print(result)
+#     return result
 
 
 ## Sockect functions
@@ -131,15 +137,21 @@ def receive_message(endpoint: socket.socket) -> str:
         raise
 
 
-def create_file(file_name: str, file_path: str):
-    full_path = f"{file_path}/{file_name}"
-    try:
-        with open(full_path, "w"):
-            pass  # This creates an empty file
-        print(f"File '{file_name}' created successfully at '{full_path}'.")
-    except Exception as e:
-        print(f"Error creating file: {e}")
+def binary_to_string(binary_data: bytes) -> str:
+    binary_string = binary_data.decode()
 
+    # Check if the binary string has spaces
+    if ' ' in binary_string:
+        # Split the binary string into 8-bit segments
+        segments = binary_string.split()
+    else:
+        # If no spaces, consider the whole string as one segment
+        segments = [binary_string[i:i+8] for i in range(0, len(binary_string), 8)]
+
+    # Convert each 8-bit segment to an integer and then to a character
+    result = ''.join(chr(int(segment, 2)) for segment in segments)
+
+    return result
 
 def print_content(content: object, debug=False):
     """custom print function that only print if the debug flag is on"""

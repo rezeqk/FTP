@@ -1,6 +1,7 @@
 import traceback
 import socket
-from utils import *  # NOQA
+from utils import * 
+import os
 
 # Server you are connecting to
 server_ip = "127.0.0.1"
@@ -24,11 +25,12 @@ def run_client():
             inputs = msg.split(" ")
 
             command = inputs[0]
-            # if the request is bye or help send the opcode
+            # if request is bye  terminate
             if command == "bye":
                 client.close()
                 break
 
+            # if request is help send opcode
             if command == "help":
                 # get opcode in binary
                 opcode = get_opcode(command)
@@ -48,7 +50,7 @@ def run_client():
                     print_content(msg_to_print, DEBUG_MODE)
 
                 else:
-                    print_content("Error", DEBUG_MODE)
+                    print_content("Error getting the help", DEBUG_MODE)
 
                 continue
 
@@ -58,7 +60,7 @@ def run_client():
                 continue
 
             # HANDLE SUMMARY REQUEST
-            elif command == "summary":
+            if command == "summary":
                 # get opcode in bytes
                 opcode = get_opcode(command)
 
@@ -84,39 +86,56 @@ def run_client():
                 # get opcode in bytes
                 opcode = get_opcode(command)
 
-                # get the length in bytes
-                filename_length = get_filename_length(inputs[1])
+                # get the filename_length
+                filename_length = len(inputs[1]) + 1
+                # TODO : check filename length, should not exceed 31 characters
+                # transfom the length in binary
+                filename_length = int_to_binary(filename_length, 5)
 
                 # get filename in bytes
                 filename_binary = string_to_binary(inputs[1])
-                request = opcode + filename_length + filename_binary
 
-                # send request for getting a file
-                send_message(client, request)
-                response = receive_message(client)
-                print(f"Response from server : {response}")
+                # get the filenmae
+                filepath = "Client/" + inputs[1]
 
-                # if request accepted
-                # get the filename and content
-                filename = "Client/" + inputs[1]
                 try:
                     #  open the file
-                    with open(filename, "rb") as file:
+                    # get the files size
+                    filesize = os.path.getsize(filepath)
+                    with open(filepath, "rb") as file:
                         file_content = file.read()
                 except FileNotFoundError:
                     # raise exception if something goes wrong
                     print("File not found.")
                     continue
 
-                file_content = file_content.decode(ENCODING)
-                send_message(client, file_content)
-                # client.send(file_content)
+                # make sure the size is 4 byte, careful if size exceed 1GB
+                filesize = filesize.to_bytes(4, byteorder='big', signed=False)
+                filesize = hex_to_binary(filesize)
+                
 
-                response = receive_message(client)
-                print(f"Response from server : {response}")
+                request = opcode + filename_length + filename_binary + filesize
+                print_content("Request",DEBUG_MODE)
+                print_content(request, DEBUG_MODE)
 
+                # Ensure the size is exactly 4 bytes
+                # send request for uploading a file
+                client.sendall(request)
+
+                response = client.recv(BUFFER_SIZE)
+                print_content(response, DEBUG_MODE)
+                response_code = response[:3]
+                print(response_code == get_response_code("put success"))
+                print(response_code, get_response_code("put success"))
+
+                if response_code == get_response_code("put success"):
+                    client.sendall(file_content)
+                else :
+                    print("Server issue, could not send the file")
+
+                response = client.recv(BUFFER_SIZE).decode()
+                print_content(response, DEBUG_MODE)
                 continue
-
             # HANDLE PUT
             elif command == "get":
                 # get opcode in bytes
@@ -148,7 +167,7 @@ def run_client():
 
                 continue
 
-                ##TODO: needs to be fixed
+                ##TODO: eeds to be fixed
             elif command == "change":  # Change command
                 opcode = get_opcode(command)
                 old_filename_length = get_filename_length(inputs[1])
