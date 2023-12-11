@@ -81,7 +81,7 @@ def run_client():
                 continue
 
             # HANDLE GET
-            elif command == "put":
+            elif command == "put": 
                 # get opcode in bytes
                 opcode = get_opcode(command)
 
@@ -188,23 +188,29 @@ def run_client():
                     continue
                 continue
 
-                ##TODO: eeds to be fixed
-            elif command == "change":  # Change command
+            elif command == "change": 
+                # get opcode in bytes
                 opcode = get_opcode(command)
-                old_filename_length = get_filename_length(inputs[1])
-                new_filename_length = get_filename_length(inputs[2])
 
-                # get the file names in bytes
-                old_filename_binary = string_to_binary(inputs[1])
-                new_filename_binary = string_to_binary(inputs[2])
-                request = (
-                    opcode
-                    + old_filename_length
-                    + old_filename_binary
-                    + new_filename_length
-                    + new_filename_binary
-                )
-                client.send(request.encode("utf-8"))
+                # get the filename_length
+                old_filename_length = len(inputs[1]) + 1
+                new_filename_length = len(inputs[2]) + 1
+
+                # TODO : check filename length, should not exceed 31 characters
+                # transfom the length in binary
+                old_filename_length = int_to_binary(old_filename_length,5)
+                new_filename_length = int_to_binary(new_filename_length,5)
+
+
+                # get filename in bytes
+                old_filename = string_to_binary(inputs[1])
+                new_filename = string_to_binary(inputs[2])
+
+
+                request = opcode + old_filename_length+old_filename + new_filename_length + new_filename
+                client.send(request)
+                response = client.recv(BUFFER_SIZE)
+                print_content(f"Response {response}", DEBUG_MODE)
 
     except (socket.error, OSError) as e:
         print(f"Error with sockets: {e}")

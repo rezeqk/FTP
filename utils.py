@@ -157,5 +157,3 @@ def print_content(content: object, debug=False):
     """custom print function that only print if the debug flag is on"""
     if debug is True:
         print(content)
-
-print(binary_to_int(b'00101001011001100111010101100011011010110010111001110100011110000111010000000000000000000000000000010000'))

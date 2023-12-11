@@ -136,9 +136,13 @@ def run_server():
                 continue
 
             elif command == "change":
+                print_content("Request", DEBUG_MODE)
+                print_content(request, DEBUG_MODE)
+
                 ##TODO:needs to be fixed
                 old_filename_length_bin = request[3:8]
                 old_filename_length = int(old_filename_length_bin, 2) - 1
+
                 new_filename_length_bin = request[
                     8 + old_filename_length * 8 : 13 + old_filename_length * 8
                 ]
@@ -163,10 +167,30 @@ def run_server():
                 old_filename = "Server/" + old_filename
                 new_filename = "Server/" + new_filename
                 # Renaming the file
-                os.rename(old_filename, new_filename)
-                print(f"Changed file name from {old_filename} to {new_filename}")
-                client_socket.send("File name changed successfully.".encode("utf-8"))
+                try:
+                    # Attempt to rename the file
+                    os.rename(old_filename, new_filename)
+                    print_content(f"Changed file name from {old_filename} to {new_filename}", DEBUG_MODE)
 
+                    # If successful, send a success response
+                    response_code = get_response_code("summary success")
+                    response_code = response_code + b"00000"
+                    client_socket.sendall(response_code)
+                    continue
+                except FileNotFoundError:
+                    # If the file is not found, send an error response
+                    error_response = get_response_code("file not found")
+                    error_response = error_response + b"00000"
+                    client_socket.sendall(error_response)
+                    continue
+                except Exception as e:
+                    # Handle other exceptions as needed
+                    print(f"An error occurred: {e}")
+                    # Send an appropriate error response
+                    error_response = get_response_code("unscesfull change")
+                    error_response = error_response + b"00000"
+                    client_socket.sendall(error_response)
+                    continue
     except (socket.error, OSError) as e:
         print(f"Error with sockets: {e}")
         traceback.print_exc()
@@ -183,7 +207,7 @@ def run_server():
 
 # return all the information about commands and what not
 def get_help():
-    # As per requirement the string is shortened to not  exceeed 31 characters
+    # As per teacher's requirement the string is shortened to not  exceeed 31 characters
     return "bye change get help put sumry"
 
 
