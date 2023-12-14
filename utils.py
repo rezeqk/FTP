@@ -1,9 +1,9 @@
 import socket
-
+BUFFER_SIZE = 1024 
 SUCCESS = 1
 ERROR = 0
-PORT = 9003
-BUFFER_SIZE = 1024
+PORT = 9010
+
 ENCODING = "utf-8"
 ERROR_MESSAGE = "Invalid inputs, type help to get help"
 OPCODES = {"put": "000", "get": "001", "change": "010", "summary": "011", "help": "100"}
@@ -59,24 +59,28 @@ def get_filename_length(file_name: str) -> bytes:
 #     else:
 #         return bytes(length_in_bin, ENCODING)
 
+
 def int_to_binary(number: int, n_bits: int) -> bytes:
-    return format(number, f"0{n_bits}b").encode('utf-8')
+    return format(number, f"0{n_bits}b").encode("utf-8")
 
 
 def binary_to_int(binary_number: bytes) -> int:
     binary_string = binary_number.decode(ENCODING)  # Decode the bytes to a string
     return int(binary_string, 2)
 
+
 def string_to_binary(string: str) -> bytes:
     # Converts the string to a binary sequence using UTF-8 encoding.
     binary_string = "".join(format(ord(x), "08b") for x in string)
     return bytes(binary_string, ENCODING)
 
+
 # from hex like format(ox0f) of bytes to binary 0000 1111
-def hex_to_binary(byte_data:bytes) -> bytes:
+def hex_to_binary(byte_data: bytes) -> bytes:
     # Convert bytes to a binary string
-    binary_string = ''.join(format(byte, '08b') for byte in byte_data)
-    return binary_string.encode('utf-8')
+    binary_string = "".join(format(byte, "08b") for byte in byte_data)
+    return binary_string.encode("utf-8")
+
 
 # def binary_to_string(binary_data: bytes) -> str:
 #     """
@@ -141,17 +145,18 @@ def binary_to_string(binary_data: bytes) -> str:
     binary_string = binary_data.decode()
 
     # Check if the binary string has spaces
-    if ' ' in binary_string:
+    if " " in binary_string:
         # Split the binary string into 8-bit segments
         segments = binary_string.split()
     else:
         # If no spaces, consider the whole string as one segment
-        segments = [binary_string[i:i+8] for i in range(0, len(binary_string), 8)]
+        segments = [binary_string[i : i + 8] for i in range(0, len(binary_string), 8)]
 
     # Convert each 8-bit segment to an integer and then to a character
-    result = ''.join(chr(int(segment, 2)) for segment in segments)
+    result = "".join(chr(int(segment, 2)) for segment in segments)
 
     return result
+
 
 def print_content(content: object, debug=False):
     """custom print function that only print if the debug flag is on"""

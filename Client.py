@@ -1,6 +1,6 @@
 import traceback
 import socket
-from utils import * 
+from utils import *
 import os
 
 # Server you are connecting to
@@ -73,14 +73,14 @@ def run_client():
                 filename_binary = string_to_binary(inputs[1])
 
                 request = opcode + filename_length + filename_binary
-                print_content("Request",DEBUG_MODE)
+                print_content("Request", DEBUG_MODE)
                 print_content(request, DEBUG_MODE)
 
                 client.send(request)
 
                 response = client.recv(BUFFER_SIZE)
                 response_code = response[:3]
-                filename_length= response[3:8]
+                filename_length = response[3:8]
                 filename_length = int(filename_length, 2) - 1
 
                 # get the filename
@@ -90,19 +90,19 @@ def run_client():
 
                 # get the file size
                 start = 8 + filename_length * 8
-                end = start + 24 # file size is always 32 bits 
+                end = start + 24  # file size is always 32 bits
                 filesize = response[start:end]
                 filesize = binary_to_int(filesize)
                 header = response[:end]
                 print_content("Response", DEBUG_MODE)
-                print_content(header,DEBUG_MODE)
+                print_content(header, DEBUG_MODE)
 
                 # handle the response
                 if response_code == get_response_code("summary success"):
                     filename = "Client/" + filename
                     remaining_size = filesize
                     file_content = b""
-                    file_content +=response[end + 8:]
+                    file_content += response[end + 8 :]
                     remaining_size -= len(file_content)
 
                     while remaining_size > 0:
@@ -112,20 +112,20 @@ def run_client():
                         remaining_size -= chunk_size
 
                     with open(filename, "wb") as file:
-                            # write to file
-                            file.write(file_content)
-                            print_content("Summary successful")
+                        # write to file
+                        file.write(file_content)
+                        print_content("Summary successful")
                 elif response_code == get_response_code("file not found"):
                     print("Error : file not found please try again")
                     continue
-                else :
+                else:
                     print("Unknown issue could not send the request")
                     continue
                 continue
                 continue
 
             # HANDLE GET
-            elif command == "put": 
+            elif command == "put":
                 # get opcode in bytes
                 opcode = get_opcode(command)
 
@@ -153,12 +153,11 @@ def run_client():
                     continue
 
                 # make sure the size is 4 byte, careful if size exceed 1GB
-                filesize = filesize.to_bytes(4, byteorder='big', signed=False)
+                filesize = filesize.to_bytes(4, byteorder="big", signed=False)
                 filesize = hex_to_binary(filesize)
-                
 
                 request = opcode + filename_length + filename_binary + filesize
-                print_content("Request",DEBUG_MODE)
+                print_content("Request", DEBUG_MODE)
                 print_content(request, DEBUG_MODE)
 
                 # Ensure the size is exactly 4 bytes
@@ -171,7 +170,7 @@ def run_client():
 
                 if response_code == get_response_code("put success"):
                     client.sendall(file_content)
-                else :
+                else:
                     print("Server issue, could not send the file")
 
                 response = client.recv(BUFFER_SIZE).decode()
@@ -192,26 +191,26 @@ def run_client():
                 filename_binary = string_to_binary(inputs[1])
 
                 request = opcode + filename_length_bin + filename_binary
-                
+
                 # send request for getting a file
                 client.sendall(request)
                 response = client.recv(BUFFER_SIZE)
                 response_code = response[:3]
-        
+
                 start = 8 + filename_length * 8
-                end = start + 24 # file size is always 32 bits 
+                end = start + 24  # file size is always 32 bits
                 filesize = response[start:end]
                 filesize = binary_to_int(filesize)
                 header = response[:end]
                 print_content("Response", DEBUG_MODE)
-                print_content(header,DEBUG_MODE)
+                print_content(header, DEBUG_MODE)
 
                 # handle the response
                 if response_code == get_response_code("get success"):
                     filename = "Client/" + inputs[1]
                     remaining_size = filesize
                     file_content = b""
-                    file_content +=response[end:]
+                    file_content += response[end:]
                     remaining_size -= len(file_content)
                     while remaining_size > 0:
                         # Receive file content in chunks
@@ -220,18 +219,18 @@ def run_client():
                         remaining_size -= chunk_size
 
                     with open(filename, "wb") as file:
-                            # write to file
-                            file.write(file_content)
-                            print_content("File dowloaded succesfully")
+                        # write to file
+                        file.write(file_content)
+                        print_content("File dowloaded succesfully")
                 elif response_code == get_response_code("file not found"):
                     print("Error : file not found please try again")
                     continue
-                else :
+                else:
                     print("Connection issue could not send the request")
                     continue
                 continue
 
-            elif command == "change": 
+            elif command == "change":
                 # get opcode in bytes
                 opcode = get_opcode(command)
 
@@ -241,16 +240,20 @@ def run_client():
 
                 # TODO : check filename length, should not exceed 31 characters
                 # transfom the length in binary
-                old_filename_length = int_to_binary(old_filename_length,5)
-                new_filename_length = int_to_binary(new_filename_length,5)
-
+                old_filename_length = int_to_binary(old_filename_length, 5)
+                new_filename_length = int_to_binary(new_filename_length, 5)
 
                 # get filename in bytes
                 old_filename = string_to_binary(inputs[1])
                 new_filename = string_to_binary(inputs[2])
 
-
-                request = opcode + old_filename_length+old_filename + new_filename_length + new_filename
+                request = (
+                    opcode
+                    + old_filename_length
+                    + old_filename
+                    + new_filename_length
+                    + new_filename
+                )
                 client.send(request)
                 response = client.recv(BUFFER_SIZE)
                 print_content(f"Response {response}", DEBUG_MODE)

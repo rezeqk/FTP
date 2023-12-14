@@ -3,7 +3,7 @@ import traceback
 import socket
 import os
 from utils import *
-
+from threading import Thread
 
 DEBUG_MODE = True
 server_ip = "127.0.0.1"
@@ -17,14 +17,35 @@ def run_server():
     server.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
     # bind server to port and address
     server.bind((server_ip, server_port))
-    # listen for incoming connections
-    server.listen(0)
     print(f"Server listening on {server_ip}:{server_port}")
+    # listen for incoming connections
+    server.listen(5)
+    try:
+        while True:
+            # accept incoming connections
+            client_socket, client_address = server.accept()
+            print(f"Accepted connection from {client_address[0]}:{client_address[1]}")
+            # Create a new thread to handle this connection
+            Thread(target=handle_client, args=(client_socket,)).start()
 
-    # accept incoming connections
-    client_socket, client_address = server.accept()
-    print(f"Accepted connection from {client_address[0]}:{client_address[1]}")
+    except (socket.error, OSError) as e:
+        print(f"Error with sockets: {e}")
+        traceback.print_exc()
+    except KeyboardInterrupt:
+        print("Keyboard interrupt")
+    finally:
+        if server is not None:
+            print("Closing Server")
+            server.close()
 
+
+# return all the information about commands and what not
+def get_help():
+    # As per teacher's requirement the string is shortened to not  exceeed 31 characters
+    return "bye change get help put sumry"
+
+
+def handle_client(client_socket: socket.socket):
     try:
         while True:
             # request = receive_message(client_socket)
@@ -45,11 +66,10 @@ def run_server():
                 # get the filename size
                 filename_length_bin = request[3:8]
                 filename_length = int(filename_length_bin, 2) - 1
-                
 
                 # get the filename
                 filename_bin = request[8 : 8 + filename_length * 8]
-   
+
                 ## transform the filename in str
                 filename = binary_to_string(filename_bin)
 
@@ -66,11 +86,10 @@ def run_server():
                     client_socket.sendall(response_code)
                     continue
 
-                response_code= get_response_code("get success")
+                response_code = get_response_code("get success")
                 # make sure the size is 4 byte, careful if size exceed 1GB
-                filesize = filesize.to_bytes(4, byteorder='big', signed=False)
+                filesize = filesize.to_bytes(4, byteorder="big", signed=False)
                 filesize = hex_to_binary(filesize)
-                
 
                 response = opcode + filename_length_bin + filename_bin + filesize
                 client_socket.send(response)
@@ -101,18 +120,16 @@ def run_server():
                 # get the filename size
                 filename_length_bin = request[3:8]
                 filename_length = int(filename_length_bin, 2) - 1
-                
 
                 # get the filename
                 filename_bin = request[8 : 8 + filename_length * 8]
-   
+
                 ## transform the filename in str
                 filename = binary_to_string(filename_bin)
-                # get the file size 
-                filesize = request[8 + filename_length * 8 : ]
+                # get the file size
+                filesize = request[8 + filename_length * 8 :]
                 filesize = binary_to_int(filesize)
-                
-                
+
                 response_code = get_response_code("put success")
                 ## pad the binary string to match header format
                 response_code = response_code + b"00000"
@@ -128,7 +145,7 @@ def run_server():
                     remaining_size -= chunk_size
 
                 with open(filename, "wb") as file:
-                        file.write(file_content)
+                    file.write(file_content)
                 # send back the response
                 response_code = get_response_code("put success")
                 response_code = response_code + b"00000"
@@ -170,10 +187,13 @@ def run_server():
                 try:
                     # Attempt to rename the file
                     os.rename(old_filename, new_filename)
-                    print_content(f"Changed file name from {old_filename} to {new_filename}", DEBUG_MODE)
+                    print_content(
+                        f"Changed file name from {old_filename} to {new_filename}",
+                        DEBUG_MODE,
+                    )
 
                     # If successful, send a success response
-                    #put and change have the same res code 
+                    # put and change have the same res code
                     response_code = get_response_code("put success")
                     response_code = response_code + b"00000"
                     client_socket.sendall(response_code)
@@ -201,7 +221,7 @@ def run_server():
 
                 # get the filename
                 filename_bin = request[8 : 8 + filename_length * 8]
-   
+
                 ## transform the filename in str
                 filename = binary_to_string(filename_bin)
 
@@ -216,8 +236,8 @@ def run_server():
                     response_code = response_code + b"00000"
                     client_socket.sendall(response_code)
                     continue
-                
-                # perfom the statical analysis 
+
+                # perfom the statical analysis
                 numbers = file_content.split(",")
                 numbers = [int(num) for num in numbers]
 
@@ -228,10 +248,12 @@ def run_server():
 
                 # Calculate the average
                 average = sum(numbers) / len(numbers)
-                response_data = f"Minimum : {minimum}\nMaximum : {maximum}\nAverage{average}" 
+                response_data = (
+                    f"Minimum : {minimum}\nMaximum : {maximum}\nAverage{average}"
+                )
 
                 # write to the file
-                # open file 
+                # open file
                 new_filename = "Summary: " + filename
                 new_path = "Server/" + new_filename
                 # Open the file in write mode
@@ -239,16 +261,16 @@ def run_server():
                     # Write the response data to the file
                     file.write(response_data)
 
-                response_code= get_response_code("summary success")
+                response_code = get_response_code("summary success")
                 # make sure the size is 4 byte, careful if size exceed 1GB
                 filesize = os.path.getsize(new_path)
-                filesize = filesize.to_bytes(4, byteorder='big', signed=False)
+                filesize = filesize.to_bytes(4, byteorder="big", signed=False)
                 filesize = hex_to_binary(filesize)
 
                 # new filename
                 filename_length = len(new_filename) + 1
                 filename_length = int_to_binary(filename_length, 5)
-                
+
                 new_filename = string_to_binary(new_filename)
                 response = response_code + filename_length + new_filename + filesize
                 client_socket.send(response)
@@ -261,18 +283,9 @@ def run_server():
     except KeyboardInterrupt:
         print("Keyboard interrupt")
     finally:
-        if server is not None:
-            print("Closing Server")
-            server.close()
         if client_socket is not None:
             print("Closing Client")
             client_socket.close()
-
-
-# return all the information about commands and what not
-def get_help():
-    # As per teacher's requirement the string is shortened to not  exceeed 31 characters
-    return "bye change get help put sumry"
 
 
 run_server()
