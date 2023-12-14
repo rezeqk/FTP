@@ -9,8 +9,10 @@ server_ip = "127.0.0.1"
 server_port = PORT
 DEBUG_MODE = True
 
+# CLIENT
 
-def run_client():
+
+def run_client(client):
     # create a socket object
     client = create_socket("TCP")
 
@@ -36,7 +38,7 @@ def run_client():
                 opcode = get_opcode(command)
 
                 request = opcode
-                client.sendall(request)
+                send_message(client, request)
 
                 # get response
                 response = client.recv(BUFFER_SIZE)
@@ -76,7 +78,7 @@ def run_client():
                 print_content("Request", DEBUG_MODE)
                 print_content(request, DEBUG_MODE)
 
-                client.send(request)
+                send_message(client, request)
 
                 response = client.recv(BUFFER_SIZE)
                 response_code = response[:3]
@@ -162,14 +164,14 @@ def run_client():
 
                 # Ensure the size is exactly 4 bytes
                 # send request for uploading a file
-                client.sendall(request)
+                send_message(client, request)
 
                 response = client.recv(BUFFER_SIZE)
                 print_content(response, DEBUG_MODE)
                 response_code = response[:3]
 
                 if response_code == get_response_code("put success"):
-                    client.sendall(file_content)
+                    send_message(client, file_content)
                 else:
                     print("Server issue, could not send the file")
 
@@ -193,7 +195,7 @@ def run_client():
                 request = opcode + filename_length_bin + filename_binary
 
                 # send request for getting a file
-                client.sendall(request)
+                send_message(client, request)
                 response = client.recv(BUFFER_SIZE)
                 response_code = response[:3]
 
@@ -254,7 +256,7 @@ def run_client():
                     + new_filename_length
                     + new_filename
                 )
-                client.send(request)
+                send_message(client, request)
                 response = client.recv(BUFFER_SIZE)
                 print_content(f"Response {response}", DEBUG_MODE)
 

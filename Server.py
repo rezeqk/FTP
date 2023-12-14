@@ -5,21 +5,38 @@ import os
 from utils import *
 from threading import Thread
 
+
 DEBUG_MODE = True
 server_ip = "127.0.0.1"
 server_port = PORT
+PROTOCOL = "TCP"
 
 
-def run_server():
+def main():
+    # Create a thread for TCP server
+    tcp_thread = Thread(target=run_tcp_server)
+    # Start TCP server thread
+    tcp_thread.start()
+
+    # Create a thread for UDP server
+    udp_thread = Thread(target=run_udp_server)
+    # Start UDP server thread
+    udp_thread.start()
+
+    # Wait for both threads to finish
+    tcp_thread.join()
+    udp_thread.join()
+
+
+def run_tcp_server():
     # create a socket object
     server = create_socket("TCP")
     # make sure socket is reusable when closed
     server.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
     # bind server to port and address
     server.bind((server_ip, server_port))
-    print(f"Server listening on {server_ip}:{server_port}")
-    # listen for incoming connections
     server.listen(5)
+    print(f"Server listening on {server_ip}:{server_port}")
     try:
         while True:
             # accept incoming connections
@@ -27,7 +44,7 @@ def run_server():
             print(f"Accepted connection from {client_address[0]}:{client_address[1]}")
             # Create a new thread to handle this connection
             Thread(target=handle_client, args=(client_socket,)).start()
-
+    # listen for incoming connections
     except (socket.error, OSError) as e:
         print(f"Error with sockets: {e}")
         traceback.print_exc()
@@ -39,10 +56,19 @@ def run_server():
             server.close()
 
 
+def run_udp_server():
+    # create a socket object
+    server = create_socket("UDP")
+    # bind server to port and address
+    server.bind((server_ip, server_port))
+    print(f"Server listening on {server_ip}:{server_port}")
+    handle_client(server)
+
+
 # return all the information about commands and what not
 def get_help():
     # As per teacher's requirement the string is shortened to not  exceeed 31 characters
-    return "bye change get help put sumry"
+    return "bye change get help put summary"
 
 
 def handle_client(client_socket: socket.socket):
@@ -83,7 +109,7 @@ def handle_client(client_socket: socket.socket):
                     # raise exception if something goes wrong
                     response_code = get_response_code("file not found")
                     response_code = response_code + b"00000"
-                    client_socket.sendall(response_code)
+                    send_message(client_socket, response_code)
                     continue
 
                 response_code = get_response_code("get success")
@@ -92,9 +118,9 @@ def handle_client(client_socket: socket.socket):
                 filesize = hex_to_binary(filesize)
 
                 response = opcode + filename_length_bin + filename_bin + filesize
-                client_socket.send(response)
+                send_message(client_socket, response)
 
-                client_socket.send(file_content)
+                send_message(client_socket, file_content)
                 continue
 
             elif command == "help":
@@ -112,7 +138,7 @@ def handle_client(client_socket: socket.socket):
                 response_length_in_bytes = int_to_binary(response_length, 5)
                 response = bytes(response_content, ENCODING)
                 response = response_code + response_length_in_bytes + response
-                client_socket.sendall(response)
+                send_message(client_socket, response)
                 continue
             elif command == "put":
                 print_content("request", DEBUG_MODE)
@@ -133,7 +159,7 @@ def handle_client(client_socket: socket.socket):
                 response_code = get_response_code("put success")
                 ## pad the binary string to match header format
                 response_code = response_code + b"00000"
-                client_socket.sendall(response_code)
+                send_message(client_socket, response_code)
 
                 filename = "Server/" + filename
                 remaining_size = filesize
@@ -149,7 +175,7 @@ def handle_client(client_socket: socket.socket):
                 # send back the response
                 response_code = get_response_code("put success")
                 response_code = response_code + b"00000"
-                client_socket.sendall(response_code)
+                send_message(client_socket, response_code)
                 continue
 
             elif command == "change":
@@ -196,13 +222,13 @@ def handle_client(client_socket: socket.socket):
                     # put and change have the same res code
                     response_code = get_response_code("put success")
                     response_code = response_code + b"00000"
-                    client_socket.sendall(response_code)
+                    send_message(client_socket, response_code)
                     continue
                 except FileNotFoundError:
                     # If the file is not found, send an error response
                     error_response = get_response_code("file not found")
                     error_response = error_response + b"00000"
-                    client_socket.sendall(error_response)
+                    send_message(client_socket, error_response)
                     continue
                 except Exception as e:
                     # Handle other exceptions as needed
@@ -210,7 +236,7 @@ def handle_client(client_socket: socket.socket):
                     # Send an appropriate error response
                     error_response = get_response_code("unscesfull change")
                     error_response = error_response + b"00000"
-                    client_socket.sendall(error_response)
+                    send_message(client_socket, error_response)
                     continue
             elif command == "summary":
                 print_content("request", DEBUG_MODE)
@@ -234,7 +260,7 @@ def handle_client(client_socket: socket.socket):
                     # raise exception if something goes wrong
                     response_code = get_response_code("file not found")
                     response_code = response_code + b"00000"
-                    client_socket.sendall(response_code)
+                    send_message(client_socket, response_code)
                     continue
 
                 # perfom the statical analysis
@@ -273,9 +299,9 @@ def handle_client(client_socket: socket.socket):
 
                 new_filename = string_to_binary(new_filename)
                 response = response_code + filename_length + new_filename + filesize
-                client_socket.send(response)
+                send_message(client_socket, response)
 
-                client_socket.send(response_data.encode(ENCODING))
+                send_message(client_socket, response_data.encode(ENCODING))
 
     except (socket.error, OSError) as e:
         print(f"Error with sockets: {e}")
@@ -288,4 +314,5 @@ def handle_client(client_socket: socket.socket):
             client_socket.close()
 
 
-run_server()
+if __name__ == "__main__":
+    main()

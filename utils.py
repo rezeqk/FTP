@@ -1,8 +1,10 @@
 import socket
-BUFFER_SIZE = 1024 
+
+BUFFER_SIZE = 1024
 SUCCESS = 1
 ERROR = 0
 PORT = 9010
+PROTOCOL = "TCP"  # set to tcp by default
 
 ENCODING = "utf-8"
 ERROR_MESSAGE = "Invalid inputs, type help to get help"
@@ -111,15 +113,19 @@ def create_socket(protocol="TCP"):
     if protocol == "TCP":
         return socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     else:
+        # return udp
         return socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
 
 
-def send_message(endpoint: socket.socket, request: str) -> None:
+def send_message(endpoint: socket.socket, request: bytes) -> None:
     try:
-        endpoint.send(request.encode(ENCODING)[:BUFFER_SIZE])
-        # TODO : Implement a way to send actual bytes
-        #    request = b"binary:" + request
-        #    endpoint.send(request[:BUFFER_SIZE])
+        if PROTOCOL == "TCP":
+            endpoint.send(request)
+        elif PROTOCOL == "UDP":
+            # get the address and  the port
+            server_address = ("127.0.0.1", PORT)
+            endpoint.sendto(request, server_address)
+
     except socket.error as e:
         print(f"Error sending message: {e}")
         raise
@@ -141,6 +147,14 @@ def receive_message(endpoint: socket.socket) -> str:
         raise
 
 
+def set_port(port):
+    pass
+
+
+def set_address(address):
+    pass
+
+
 def binary_to_string(binary_data: bytes) -> str:
     binary_string = binary_data.decode()
 
@@ -156,6 +170,14 @@ def binary_to_string(binary_data: bytes) -> str:
     result = "".join(chr(int(segment, 2)) for segment in segments)
 
     return result
+
+
+def get_protocol():
+    return PROTOCOL
+
+
+def set_protocol(protocol: str) -> None:
+    PROTOCOL = protocol
 
 
 def print_content(content: object, debug=False):
