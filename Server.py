@@ -75,7 +75,7 @@ def run_server():
                 response = opcode + filename_length_bin + filename_bin + filesize
                 client_socket.send(response)
 
-                client_socket.send(file_content.encode(ENCODING))
+                client_socket.send(file_content)
                 continue
 
             elif command == "help":

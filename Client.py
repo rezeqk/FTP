@@ -213,7 +213,6 @@ def run_client():
                     file_content = b""
                     file_content +=response[end:]
                     remaining_size -= len(file_content)
-
                     while remaining_size > 0:
                         # Receive file content in chunks
                         chunk_size = min(remaining_size, BUFFER_SIZE)
