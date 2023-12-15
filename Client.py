@@ -1,5 +1,6 @@
 import traceback
 import socket
+from typing import Protocol
 from utils import *
 import os
 
@@ -9,12 +10,16 @@ server_ip = "127.0.0.1"
 server_port = PORT
 DEBUG_MODE = True
 
-# CLIENT
 
+def run_client():
+    protocol = input("Select 1 for UDP and 2 for TCP\n")
+    if protocol == "1":
+        PROTOCOL = "TCP"
+    else:
+        PROTOCOL = "UDP"
 
-def run_client(client):
     # create a socket object
-    client = create_socket("TCP")
+    client = create_socket(PROTOCOL)
 
     # connect to server
     client.connect((server_ip, server_port))
