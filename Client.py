@@ -12,11 +12,17 @@ DEBUG_MODE = True
 
 
 def run_client():
-    protocol = input("Select 1 for UDP and 2 for TCP\n")
-    if protocol == "1":
-        PROTOCOL = "TCP"
-    else:
-        PROTOCOL = "UDP"
+    while True:
+        protocol = input("Select 1 for TCP and 2 for UDP\n")
+        if protocol == "1":
+            set_protocol("TCP")
+            break
+        elif protocol == "2":
+            set_protocol("UDP")
+            break
+        else:
+            print("put something else")
+            continue
 
     # create a socket object
     client = create_socket(PROTOCOL)
