@@ -16,20 +16,22 @@ def run_client():
         protocol = input("Select 1 for TCP and 2 for UDP\n")
         if protocol == "1":
             set_protocol("TCP")
+            client = create_socket(PROTOCOL)
+            client.connect((server_ip, server_port))
+            print(f"Client listening at : {server_port}")
+
             break
         elif protocol == "2":
             set_protocol("UDP")
+            client = create_socket(PROTOCOL)
+            print(type(protocol))
             break
         else:
             print("put something else")
             continue
 
-    # create a socket object
-    client = create_socket(PROTOCOL)
+  
 
-    # connect to server
-    client.connect((server_ip, server_port))
-    print(f"Client listening at : {server_port}")
 
     try:
         while True:

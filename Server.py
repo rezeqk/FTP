@@ -9,7 +9,7 @@ from threading import Thread
 DEBUG_MODE = True
 server_ip = "127.0.0.1"
 server_port = PORT
-PROTOCOL = "TCP"
+
 
 
 def main():
@@ -59,6 +59,7 @@ def run_tcp_server():
 def run_udp_server():
     # create a socket object
     server = create_socket("UDP")
+    set_protocol("UDP")
     # bind server to port and address
     server.bind((server_ip, server_port))
     print(f"Server listening on {server_ip}:{server_port}")

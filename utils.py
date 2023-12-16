@@ -3,7 +3,7 @@ import socket
 BUFFER_SIZE = 1024
 SUCCESS = 1
 ERROR = 0
-PORT = 9010
+PORT = 12000
 PROTOCOL = "TCP"  # set to tcp by default
 
 ENCODING = "utf-8"
@@ -108,20 +108,22 @@ def hex_to_binary(byte_data: bytes) -> bytes:
 
 
 ## Sockect functions
-def create_socket(protocol="TCP"):
+def create_socket(protocol : str):
     protocol.capitalize()
     if protocol == "TCP":
         return socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    else:
+    elif protocol == "UDP":
         # return udp
         return socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
 
 
 def send_message(endpoint: socket.socket, request: bytes) -> None:
+    print("Sending message : ",PROTOCOL)
     try:
         if PROTOCOL == "TCP":
             endpoint.send(request)
         elif PROTOCOL == "UDP":
+            print("sending message", PROTOCOL)
             # get the address and  the port
             server_address = ("127.0.0.1", PORT)
             endpoint.sendto(request, server_address)
@@ -177,7 +179,9 @@ def get_protocol():
 
 
 def set_protocol(protocol: str) -> None:
+    global PROTOCOL
     PROTOCOL = protocol
+    print(f"Protocol set to {PROTOCOL}")
 
 
 def print_content(content: object, debug=False):
