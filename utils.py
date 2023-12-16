@@ -3,7 +3,7 @@ import socket
 BUFFER_SIZE = 1024
 SUCCESS = 1
 ERROR = 0
-PORT = 9010
+PORT = 20000
 PROTOCOL = "TCP"  # set to tcp by default
 
 ENCODING = "utf-8"

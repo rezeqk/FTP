@@ -135,7 +135,7 @@ def run_client():
                     print("Unknown issue could not send the request")
                     continue
                 continue
-                continue
+            
 
             # HANDLE GET
             elif command == "put":

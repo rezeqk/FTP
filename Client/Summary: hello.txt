@@ -1,0 +1,3 @@
+Minimum : 10
+Maximum : 100
+Average42.833333333333336
