@@ -4,6 +4,7 @@ import socket
 import os
 from utils import *
 from threading import Thread
+import time
 
 
 DEBUG_MODE = True
@@ -76,7 +77,8 @@ def handle_client(client_socket: socket.socket):
     try:
         while True:
             # request = receive_message(client_socket)
-            request = client_socket.recv(BUFFER_SIZE)
+            request, addr = receive_message(client_socket)
+            print("request", request)
             # check if request is valid
             if not request:
                 continue
@@ -139,8 +141,9 @@ def handle_client(client_socket: socket.socket):
                 response_length_in_bytes = int_to_binary(response_length, 5)
                 response = bytes(response_content, ENCODING)
                 response = response_code + response_length_in_bytes + response
-                send_message(client_socket, response)
-                continue
+                send_message(client_socket, response, addr)
+                
+                
             elif command == "put":
                 print_content("request", DEBUG_MODE)
                 print_content(request, DEBUG_MODE)
@@ -160,7 +163,7 @@ def handle_client(client_socket: socket.socket):
                 response_code = get_response_code("put success")
                 ## pad the binary string to match header format
                 response_code = response_code + b"00000"
-                send_message(client_socket, response_code)
+                send_message(client_socket, response_code,addr)
 
                 filename = "Server/" + filename
                 remaining_size = filesize
@@ -168,7 +171,7 @@ def handle_client(client_socket: socket.socket):
                 while remaining_size > 0:
                     # Receive file content in chunks
                     chunk_size = min(remaining_size, BUFFER_SIZE)
-                    file_content += client_socket.recv(chunk_size)
+                    file_content += receive_message(client_socket, chunk_size)[0]
                     remaining_size -= chunk_size
 
                 with open(filename, "wb") as file:
@@ -176,7 +179,7 @@ def handle_client(client_socket: socket.socket):
                 # send back the response
                 response_code = get_response_code("put success")
                 response_code = response_code + b"00000"
-                send_message(client_socket, response_code)
+                send_message(client_socket, response_code, addr)
                 continue
 
             elif command == "change":

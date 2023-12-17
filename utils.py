@@ -3,7 +3,7 @@ import socket
 BUFFER_SIZE = 1024
 SUCCESS = 1
 ERROR = 0
-PORT = 12000
+PORT = 20000
 PROTOCOL = "TCP"  # set to tcp by default
 
 ENCODING = "utf-8"
@@ -113,41 +113,47 @@ def create_socket(protocol : str):
     if protocol == "TCP":
         return socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     elif protocol == "UDP":
-        # return udp
+         # return udp
         return socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
 
 
-def send_message(endpoint: socket.socket, request: bytes) -> None:
+def send_message(endpoint: socket.socket, request: bytes, addr = None) -> None:
     print("Sending message : ",PROTOCOL)
+    print(request)
     try:
         if PROTOCOL == "TCP":
             endpoint.send(request)
         elif PROTOCOL == "UDP":
             print("sending message", PROTOCOL)
             # get the address and  the port
-            server_address = ("127.0.0.1", PORT)
-            endpoint.sendto(request, server_address)
-
+            endpoint.sendto(request, addr)
+    
     except socket.error as e:
         print(f"Error sending message: {e}")
         raise
 
 
-def receive_message(endpoint: socket.socket) -> str:
+# def receive_message(endpoint: socket.socket) -> str:
+#         if PROTOCOL == "TCP":
+#             return endpoint.recv(BUFFER_SIZE)
+#         elif PROTOCOL == "UDP":
+#             response, server_address = endpoint.recvfrom(BUFFER_SIZE)
+#             return response
+    
+def receive_message(endpoint: socket.socket, buffer=BUFFER_SIZE) -> str:
     try:
-        response = endpoint.recv(BUFFER_SIZE)
-        # Check if the response starts with the marker "binary:"
-        if response.startswith(b"binary:"):
-            ### remove the marker
-            binary_data = response[len(b"binary:") :]
-            # transform marker to string
-            return binary_data
-        else:
-            return response.decode(ENCODING)
-    except socket.error as e:
-        print(f"Error receiving message: {e}")
-        raise
-
+        if PROTOCOL == "TCP":
+            # For TCP, use recv
+            return endpoint.recv(buffer)
+        elif PROTOCOL == "UDP":
+            # For UDP, use recvfrom
+            return endpoint.recvfrom(buffer)
+            
+           
+    except BlockingIOError:
+        # No data available to be read
+        print("No data available to be read")
+        return None
 
 def set_port(port):
     pass

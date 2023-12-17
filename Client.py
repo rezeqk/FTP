@@ -1,6 +1,5 @@
 import traceback
 import socket
-from typing import Protocol
 from utils import *
 import os
 
@@ -9,7 +8,7 @@ server_ip = "127.0.0.1"
 # Port you are connecting to
 server_port = PORT
 DEBUG_MODE = True
-
+ADDR = (server_ip, server_port)
 
 def run_client():
     while True:
@@ -23,14 +22,20 @@ def run_client():
             break
         elif protocol == "2":
             set_protocol("UDP")
-            client = create_socket(PROTOCOL)
-            print(type(protocol))
+            client = create_socket("UDP")
+            print(get_protocol())
             break
         else:
             print("put something else")
             continue
 
   
+# Checking the socket type
+    if client.type == socket.SOCK_DGRAM:
+        print("The socket is a UDP socket.")
+    elif client.type == socket.SOCK_STREAM:
+        print("The socket is a TCP socket.")
+
 
 
     try:
@@ -51,22 +56,28 @@ def run_client():
                 opcode = get_opcode(command)
 
                 request = opcode
-                send_message(client, request)
+                send_message(client, request, ADDR)
 
                 # get response
-                response = client.recv(BUFFER_SIZE)
+                response,_ = receive_message(client)
                 response_code = response[:3]
-
+                print("Response", get_response_code("help"))
+                print("Response_code",response_code)
+                print_content(response, DEBUG_MODE)
                 if response_code == get_response_code("help"):
                     data_length = response[3:8]
                     received_data = response[8:]
                     msg_to_print = f"Received packet: Response code : {response_code} - Data length : {data_length}\nData: {received_data}"
                     print_content(msg_to_print, DEBUG_MODE)
+                    
+                
 
                 else:
                     print_content("Error getting the help", DEBUG_MODE)
 
+
                 continue
+            
 
             # the request is something else check_inputs, if iputs are not valid, restart the loop
             if inputs_are_not_valid(inputs):
@@ -177,18 +188,19 @@ def run_client():
 
                 # Ensure the size is exactly 4 bytes
                 # send request for uploading a file
-                send_message(client, request)
-
-                response = client.recv(BUFFER_SIZE)
+                send_message(client, request, ADDR)
+                
+                
+                response,_ = receive_message(client)
                 print_content(response, DEBUG_MODE)
                 response_code = response[:3]
 
                 if response_code == get_response_code("put success"):
-                    send_message(client, file_content)
+                    send_message(client, file_content, ADDR)
                 else:
                     print("Server issue, could not send the file")
 
-                response = client.recv(BUFFER_SIZE).decode()
+                response = receive_message(client)
                 print_content(response, DEBUG_MODE)
                 continue
             # HANDLE PUT
