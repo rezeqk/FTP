@@ -220,7 +220,7 @@ def run_client():
                 request = opcode + filename_length_bin + filename_binary
 
                 # send request for getting a file
-                send_message(client, request)
+                send_message(client, request,ADDR)
                 response = client.recv(BUFFER_SIZE)
                 response_code = response[:3]
 

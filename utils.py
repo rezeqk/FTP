@@ -142,10 +142,10 @@ def send_message(endpoint: socket.socket, request: bytes, addr = None) -> None:
     
 def receive_message(endpoint: socket.socket, buffer=BUFFER_SIZE) -> str:
     try:
-        if PROTOCOL == "TCP":
+        if endpoint.type == socket.SOCK_STREAM:
             # For TCP, use recv
-            return endpoint.recv(buffer)
-        elif PROTOCOL == "UDP":
+            return endpoint.recv(buffer), endpoint.getpeername()
+        elif endpoint.type == socket.SOCK_DGRAM:
             # For UDP, use recvfrom
             return endpoint.recvfrom(buffer)
             

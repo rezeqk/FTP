@@ -121,9 +121,9 @@ def handle_client(client_socket: socket.socket):
                 filesize = hex_to_binary(filesize)
 
                 response = opcode + filename_length_bin + filename_bin + filesize
-                send_message(client_socket, response)
+                send_message(client_socket, response, addr)
 
-                send_message(client_socket, file_content)
+                send_message(client_socket, file_content, addr)
                 continue
 
             elif command == "help":
@@ -163,7 +163,7 @@ def handle_client(client_socket: socket.socket):
                 response_code = get_response_code("put success")
                 ## pad the binary string to match header format
                 response_code = response_code + b"00000"
-                send_message(client_socket, response_code,addr)
+                send_message(client_socket, response_code, addr)
 
                 filename = "Server/" + filename
                 remaining_size = filesize
@@ -226,13 +226,13 @@ def handle_client(client_socket: socket.socket):
                     # put and change have the same res code
                     response_code = get_response_code("put success")
                     response_code = response_code + b"00000"
-                    send_message(client_socket, response_code)
+                    send_message(client_socket, response_code, addr)
                     continue
                 except FileNotFoundError:
                     # If the file is not found, send an error response
                     error_response = get_response_code("file not found")
                     error_response = error_response + b"00000"
-                    send_message(client_socket, error_response)
+                    send_message(client_socket, error_response,addr)
                     continue
                 except Exception as e:
                     # Handle other exceptions as needed
@@ -240,7 +240,7 @@ def handle_client(client_socket: socket.socket):
                     # Send an appropriate error response
                     error_response = get_response_code("unscesfull change")
                     error_response = error_response + b"00000"
-                    send_message(client_socket, error_response)
+                    send_message(client_socket, error_response,addr)
                     continue
             elif command == "summary":
                 print_content("request", DEBUG_MODE)
@@ -264,7 +264,7 @@ def handle_client(client_socket: socket.socket):
                     # raise exception if something goes wrong
                     response_code = get_response_code("file not found")
                     response_code = response_code + b"00000"
-                    send_message(client_socket, response_code)
+                    send_message(client_socket, response_code, addr)
                     continue
 
                 # perfom the statical analysis
@@ -305,7 +305,7 @@ def handle_client(client_socket: socket.socket):
                 response = response_code + filename_length + new_filename + filesize
                 send_message(client_socket, response)
 
-                send_message(client_socket, response_data.encode(ENCODING))
+                send_message(client_socket, response_data.encode(ENCODING), addr)
 
     except (socket.error, OSError) as e:
         print(f"Error with sockets: {e}")
