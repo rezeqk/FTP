@@ -86,17 +86,14 @@ def run_client():
                 # get response
                 response,_ = receive_message(client)
                 response_code = response[:3]
-                print("Response", get_response_code("help"))
                 print("Response_code",response_code)
                 print_content(response, DEBUG_MODE)
                 if response_code == get_response_code("help"):
                     data_length = response[3:8]
                     received_data = response[8:]
                     msg_to_print = f"Received packet: Response code : {response_code} - Data length : {data_length}\nData: {received_data}"
+                    print(f" response : {response_code},  data :  {received_data}")
                     print_content(msg_to_print, DEBUG_MODE)
-                    
-                
-
                 else:
                     print_content("Error getting the help", DEBUG_MODE)
 
@@ -129,7 +126,7 @@ def run_client():
 
                 send_message(client, request)
 
-                response = client.recv(BUFFER_SIZE)
+                response = receive_message(client)[0]
                 response_code = response[:3]
                 filename_length = response[3:8]
                 filename_length = int(filename_length, 2) - 1
@@ -144,35 +141,37 @@ def run_client():
                 end = start + 24  # file size is always 32 bits
                 filesize = response[start:end]
                 filesize = binary_to_int(filesize)
+                print("filesize",filesize)
                 header = response[:end]
                 print_content("Response", DEBUG_MODE)
                 print_content(header, DEBUG_MODE)
+                print(response)
 
                 # handle the response
                 if response_code == get_response_code("summary success"):
                     filename = "Client/" + filename
                     remaining_size = filesize
-                    file_content = b""
-                    file_content += response[end + 8 :]
+                    print(response, response[end: ])
+                    file_content  = response[end + 8 :]
                     remaining_size -= len(file_content)
 
+                    print(file_content)
                     while remaining_size > 0:
                         # Receive file content in chunks
                         chunk_size = min(remaining_size, BUFFER_SIZE)
-                        file_content += client.recv(chunk_size)
+                        file_content += receive_message(client, chunk_size)
                         remaining_size -= chunk_size
-
                     with open(filename, "wb") as file:
                         # write to file
                         file.write(file_content)
-                        print_content("Summary successful")
+                        print(file_content)
                 elif response_code == get_response_code("file not found"):
                     print("Error : file not found please try again")
                     continue
                 else:
                     print("Unknown issue could not send the request")
                     continue
-                continue
+                print("Summary downloaded succesfully")
                 continue
 
             # HANDLE GET
@@ -227,6 +226,7 @@ def run_client():
 
                 response = receive_message(client)
                 print_content(response, DEBUG_MODE)
+                print("File uploaded succesfully")
                 continue
             # HANDLE PUT
             elif command == "get":
@@ -260,6 +260,7 @@ def run_client():
                 header = response[:end]
                 print_content("Response", DEBUG_MODE)
                 print_content(header, DEBUG_MODE)
+
 
                 # handle the response
                 if response_code == get_response_code("get success"):
@@ -311,8 +312,9 @@ def run_client():
                     + new_filename
                 )
                 send_message(client, request)
-                response = client.recv(BUFFER_SIZE)
+                response = receive_message(client)
                 print_content(f"Response {response}", DEBUG_MODE)
+                print("File name changed succesfully")
 
     except (socket.error, OSError) as e:
         print(f"Error with sockets: {e}")

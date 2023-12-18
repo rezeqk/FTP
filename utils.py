@@ -1,3 +1,6 @@
+#Name: Rezeq Khader ID:26777538
+#Name: Shami Ivan Senga ID:40228447
+
 import socket
 
 BUFFER_SIZE = 1024
@@ -151,7 +154,7 @@ def receive_message(endpoint: socket.socket, buffer=BUFFER_SIZE) -> str:
     try:
         if endpoint.type == socket.SOCK_STREAM:
             # For TCP, use recv
-            return endpoint.recv(buffer), endpoint.getpeername()
+            return endpoint.recv(buffer), 0
         elif endpoint.type == socket.SOCK_DGRAM:
             # For UDP, use recvfrom
             return endpoint.recvfrom(buffer)
