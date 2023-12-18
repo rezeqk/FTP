@@ -78,10 +78,11 @@ def handle_client(client_socket: socket.socket):
         while True:
             # request = receive_message(client_socket)
             request, addr = receive_message(client_socket)
-            print("request", request)
             # check if request is valid
             if not request:
                 continue
+
+            print("request", request)
             # get the opcode
             opcode = request[:3]
             # transform the opcode in commange
@@ -91,7 +92,6 @@ def handle_client(client_socket: socket.socket):
 
             if command == "get":
                 print_content("Request", DEBUG_MODE)
-                print_content(request, DEBUG_MODE)
                 # get the filename size
                 filename_length_bin = request[3:8]
                 filename_length = int(filename_length_bin, 2) - 1
@@ -108,11 +108,12 @@ def handle_client(client_socket: socket.socket):
                     filesize = os.path.getsize(filepath)
                     with open(filepath, "rb") as file:
                         file_content = file.read()
-                except FileNotFoundError:
+                except FileNotFoundError as e :
+                    print(f"Error file not found: {e}")
                     # raise exception if something goes wrong
                     response_code = get_response_code("file not found")
                     response_code = response_code + b"00000"
-                    send_message(client_socket, response_code)
+                    send_message(client_socket, response_code, addr)
                     continue
 
                 response_code = get_response_code("get success")

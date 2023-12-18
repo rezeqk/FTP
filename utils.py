@@ -117,17 +117,24 @@ def create_socket(protocol : str):
         return socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
 
 
-def send_message(endpoint: socket.socket, request: bytes, addr = None) -> None:
-    print("Sending message : ",PROTOCOL)
-    print(request)
+
+
+def send_message(endpoint: socket.socket, request: bytes, addr=None) -> None:
     try:
-        if PROTOCOL == "TCP":
+        if endpoint.type == socket.SOCK_STREAM:
             endpoint.send(request)
-        elif PROTOCOL == "UDP":
-            print("sending message", PROTOCOL)
-            # get the address and  the port
-            endpoint.sendto(request, addr)
-    
+        elif endpoint.type == socket.SOCK_DGRAM:
+            # Calculate the number of packets needed
+            num_packets = (len(request) + BUFFER_SIZE - 1) // BUFFER_SIZE
+
+
+            # Send the data in chunks of BUFFER_SIZE
+            for i in range(num_packets):
+                start = i * BUFFER_SIZE
+                end = (i + 1) * BUFFER_SIZE
+                chunk = request[start:end]
+                endpoint.sendto(chunk, addr)
+
     except socket.error as e:
         print(f"Error sending message: {e}")
         raise

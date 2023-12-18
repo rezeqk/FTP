@@ -1,13 +1,38 @@
+#Name: Rezeq Khader ID:26777538
+#Name: Shami Ivan Senga ID:40228447
+
 import traceback
 import socket
 from utils import *
 import os
+import sys
 
-# Server you are connecting to
-server_ip = "127.0.0.1"
+DEFAULT_SERVER_IP = "127.0.0.1"
+DEFAULT_PORT = 20000
+DEFAULT_DEBUG_MODE = False
 # Port you are connecting to
 server_port = PORT
-DEBUG_MODE = True
+DEBUG_MODE = False
+
+
+
+
+# Check if there are command-line arguments
+if len(sys.argv) >= 3:
+    server_ip = sys.argv[1]
+    server_port = int(sys.argv[2])
+else:
+    # Use default values if not provided
+    server_ip = DEFAULT_SERVER_IP
+    server_port = DEFAULT_PORT
+
+# Check for the debug flag (0 means OFF, 1 means ON)
+debug_flag = DEFAULT_DEBUG_MODE
+if len(sys.argv) >= 4:
+    debug_flag = bool(int(sys.argv[3]))
+
+
+    
 ADDR = (server_ip, server_port)
 
 def run_client():
@@ -221,8 +246,12 @@ def run_client():
 
                 # send request for getting a file
                 send_message(client, request,ADDR)
-                response = client.recv(BUFFER_SIZE)
+                response = receive_message(client)[0]
+                print_content(response, DEBUG_MODE)
                 response_code = response[:3]
+                if response_code == get_response_code("file not found"):
+                    print_content("Error : File not found", DEBUG_MODE)
+                    continue
 
                 start = 8 + filename_length * 8
                 end = start + 24  # file size is always 32 bits
