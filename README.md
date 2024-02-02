@@ -10,8 +10,8 @@
 
 # TODO
 
-- [ ] Make sure server can connect to multiple client <sub>
-- [ ] implement udp connection
-- [ ] fix the change function
-- [ ] implement byte transfer
-- [ ] need a way to send to client or server an error if something bad occru
+- [x] Make sure server can connect to multiple client <sub>
+- [x] implement udp connection
+- [x] fix the change function
+- [x] implement byte transfer
+- [x] need a way to send to client or server an error if something bad occru
